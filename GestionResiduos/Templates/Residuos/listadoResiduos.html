@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Listado Residuos Precios{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5" style="min-height: 50vh;">
+
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-dark">Listado de Residuos y Precios</h4>
+        <p class="text-muted">Usuario: <strong>{{ user.get_full_name }}</strong></p>
+    </div>
+
+
+    <div class="card rounded-card">
+        <div class="card-header brand-header">
+            <h5 class="mb-0 text-center">Listado de Residuo y Precios</h5>
+        </div>
+
+        <div class="card-body p-0">
+            {% if residuos_precios %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th class="text-nowrap">ID</th>
+                                <th class="text-nowrap">Tipo Residuo</th>
+                                <th class="text-nowrap">Residuo</th>
+                                <th class="text-nowrap">Costo Unitario</th> 
+                                <th class="text-nowrap">Acción</th>                         
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for residuos_precios in residuos_precios %}
+                                <tr class="text-center">
+                                    <td class="text-nowrap">{{ residuos_precios.id }}</td>  
+                                    <td class="text-nowrap">{{ residuos_precios.tipo_residuo }}</td>                                
+                                    <td class="text-nowrap">{{ residuos_precios.residuo }}</td>
+                                    <td class="text-nowrap" data-formatear="miles">{{ residuos_precios.costo_unitario }}</td> 
+                                    <td>
+                                        <a href="{% url 'actualizarResiduoPrecio' residuos_precios.id %}" class="link-header">
+                                            <i class="fa fa-edit icono" aria-hidden="true" title="Actualizar"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="text-center mt-5 mb-5">
+        <a href="{% url 'agregarResiduoPrecio' %}" class="btn btn-light boton-mas" style="border: 2px solid black">
+            <i class="fa fa-plus" aria-hidden="true"></i> Agregar Nuevo Residuo
+        </a>
+    </div>
+
+</div>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const formatearMiles = valor => {
+            return valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        };
+    
+        const columnas = document.querySelectorAll("td[data-formatear='miles']");
+    
+        columnas.forEach(td => {
+            const valor = td.textContent.replace(/\./g, '').trim();
+            if (!isNaN(valor)) {
+                td.textContent = formatearMiles(Number(valor));
+            }
+        });
+    });
+    </script>
+
+{% endblock %}

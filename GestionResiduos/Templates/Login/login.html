@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="form-container inicio-sesion">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h3 class="text-center mt-3 mb-4">Inicio de Sesión</h3>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger text-center mb-4" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <div class="col-12">
+                    <label for="username" class="form-label">Cédula</label>
+                    <input type="text" id="username" name="username" class="form-control mb-3" required placeholder="Ingrese la cédula..." value="{{ request.POST.username }}" style="border: 2px solid black;">
+                </div>
+
+                <div class="col-12">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" id="password" name="password" class="form-control mb-3" required placeholder="Ingrese la contraseña..." style="border: 2px solid black;"> 
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-outline-success text-center mt-5 boton">Iniciar Sesión</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

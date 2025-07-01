@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Autorizaciones Pendientes{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-5 text-white py-2 rounded" style="background-color: #6ba43a;">
+        <b>Autorizaciones Pendientes de Salida</b>
+    </h3>
+
+    {% if messages %}
+        <div class="d-flex justify-content-center mt-3">
+            <div style="width: 100%; max-width: 600px;">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% for item in grupos_alerta %}
+        {% with grupo=item.grupo %}
+        <div class="card shadow borde-input mb-4">
+            <div class="card-header bg-white border-bottom-0">
+                <h5 class="mb-0">Información del Grupo: <span class="text-dark">{{ grupo.codigo }}</span></h5>
+            </div>
+            <div class="card-body">
+
+                {% for alerta in item.diferencias %}
+                    <div class="alert alert-danger text-center fw-bold">
+                        ⚠️ Diferencia detectada para <u>{{ alerta.residuo|title }}</u><br>
+                        Sergio: {{ alerta.valor_p1 }} | Vigilancia: {{ alerta.valor_p2 }}<br>
+                        Tipo: {{ alerta.modo }}
+                        {% if alerta.modo == 'Peso' %}
+                            <br>Diferencia: {{ alerta.diferencia_pct }}%
+                        {% elif alerta.mensaje %}
+                            <br>Diferencia: {{ alerta.mensaje }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+
+                <div class="mb-4">
+                    <h6 class="text-secondary">Residuo Registrado por Sergio:</h6>
+                    <ul class="list-group borde-input">
+                        {% for registro in grupo.formularioperfil1_set.all %}
+                            <li class="list-group-item">
+                                {{ registro.tipo_residuo }} - {{ registro.residuo }} |
+                                {{ registro.peso_cantidad }} 
+                            </li>
+                            
+                        {% empty %}
+                            <li class="list-group-item">No hay registros.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-secondary">Residuo Registrado por Vigilancia:</h6>
+                    <ul class="list-group borde-input">
+                        {% for registro in grupo.formularioperfil2_set.all %}
+                            <li class="list-group-item">
+                                {{ registro.tipo_residuo }} - {{ registro.residuo }} |
+                                {{ registro.peso_cantidad }} 
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">No hay registros.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <form method="POST" class="p-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="grupo_id" value="{{ grupo.id }}">
+                    
+                    {% for alerta in item.diferencias %}
+                        {% if alerta.modo == 'Peso' %}
+                            <input type="hidden" name="alerta_peso" value="{{ alerta.diferencia_pct }}">
+                        {% elif alerta.mensaje %}
+                            <input type="hidden" name="alerta_cant" value="{{ alerta.mensaje }}">
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="mb-3">
+                        <label class="form-label"><b>¿Autorizar salida?</b></label>
+                        <select name="estado" class="form-select borde-input" required>
+                            <option value="">Seleccione</option>
+                            <option value="autorizado">Autorizar</option>
+                            <option value="rechazado">Rechazar</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><b>Observación (opcional)</b></label>
+                        <textarea name="observacion" class="form-control borde-input" rows="3"></textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-light mt-3 mb-2" id="boton-enviar">
+                            Guardar Autorización
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endwith %}
+    {% empty %}
+        <div class="alert alert-info text-center">
+            No hay grupos pendientes de autorización.
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.costo-total').forEach(function (elemento) {
+            const valor = parseFloat(elemento.dataset.valor);
+            if (!isNaN(valor)) {
+                const valorFormateado = valor.toLocaleString('es-CO', { minimumFractionDigits: 0 });
+                elemento.innerHTML = `Costo Total: $${valorFormateado}`;
+            }
+        });
+    });
+</script>
+{% endblock %}

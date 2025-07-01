@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Formulario Residuos{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="container mt-5">
+
+        
+
+
+        <div class="row justify-content-center">
+
+            <span class="navbar-text text-center">
+                <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
+            </span>
+
+            <div class="form-container">
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <h5 class="text-center mt-3 mb-2">Registrar Residuo <br><br> {{ grupo_codigo }}</h5>
+                    <input type="hidden" name="grupo_codigo" value="{{ grupo_codigo }}">
+
+                    <div id="mensaje-cedula"></div>
+
+                    {% if messages %}
+                        <div class="d-flex justify-content-center mt-3">
+                            <div style="width: 100%; max-width: 600px;">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+
+                        <div class="col-sm-12 col-md-12 col-lg-6">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control borde-input" readonly>
+                        </div>
+
+                        <div class="col-sm-12 col-md-12 col-lg-6">
+                            <label for="hora" class="form-label">Hora</label>
+                            <input type="time" id="hora" name="hora" class="form-control borde-input" readonly>
+                        </div>
+
+                        <div class="col-sm-12 col-md-6 col-lg-12">
+                            <label for="tipo" class="form-label">Tipo de Residuo</label>
+                            <select id="tipo" name="tipo" class="form-select borde-input" required>
+                                <option value="">Seleccione</option>
+                                <option value="Aprovechable">Aprovechable</option>
+                                <option value="Especial">Especial</option>
+                                <option value="Respel">Respel</option>
+                                <option value="Respel Aprovechable">Respel Aprovechable</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-12 col-md-6 col-lg-12">
+                            <label for="residuo" class="form-label">Residuo</label>
+                            <select id="residuo" name="residuo" class="form-select borde-input" required>
+                                
+                    
+                            </select>
+                        </div>
+
+
+
+                        <div class="col-sm-12 col-md-12 col-lg-12">
+                            <label for="peso" class="form-label">Peso</label>
+                            <input type="number" step="0.01" id="peso" name="peso" class="form-control borde-input" required>
+                        </div>
+
+                
+                        
+                        {% if es_sergio %}
+                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                <label for="costo_unitario" class="form-label">Costo Unitario</label>
+                                <input type="text" step="0.01" id="costo_unitario" name="costo_unitario" class="form-control borde-input" required>
+                                <div class="mensaje"></div>
+                            </div>
+
+                            <div class="col-sm-12 col-md-12 col-lg-12">
+                                <label for="costo_total" class="form-label">Costo Total</label>
+                                <input type="text" step="0.01" id="costo_total" name="costo_total" class="form-control borde-input" readonly>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-light mt-4" id="boton-enviar">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const preciosResiduos = JSON.parse('{{ precios_residuos_json|escapejs }}');
+
+        // Fecha y hora actual
+        const fechaInput = document.getElementById("fecha");
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        fechaInput.value = `${yyyy}-${mm}-${dd}`;
+    
+        const campoHora = document.getElementById('hora');
+        if (campoHora) {
+            const hh = String(hoy.getHours()).padStart(2, '0');
+            const min = String(hoy.getMinutes()).padStart(2, '0');
+            campoHora.value = `${hh}:${min}`;
+        }
+    
+        // Costo total dinámico
+        const peso = document.getElementById('peso');
+        const costoUnitario = document.getElementById('costo_unitario');
+        const costoTotal = document.getElementById('costo_total');
+    
+        function parseValor(valor) {
+            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+    
+        function formatearMiles(valor) {
+            return valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+    
+        function calcularCostoTotal() {
+            const pesoVal = parseFloat(peso.value) || 0;
+            const costoVal = parseValor(costoUnitario.value);
+            const total = pesoVal * costoVal;
+            costoTotal.value = formatearMiles(Math.round(total));
+        }
+    
+        if (costoUnitario) {
+            costoUnitario.addEventListener('input', function () {
+                let valor = costoUnitario.value.replace(/\D/g, '');
+                if (valor !== "") {
+                    costoUnitario.value = formatearMiles(valor);
+                }
+                calcularCostoTotal();
+            });
+        }
+    
+        if (peso) {
+            peso.addEventListener('input', calcularCostoTotal);
+        }
+    
+        // Selección de tipo y residuo
+        const tipoSelect = document.getElementById("tipo");
+        const residuoSelect = document.getElementById("residuo");
+    
+        const residuosPorTipo = {
+            "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidon 55 - KG", "Bidon 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
+            "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Madera - MT3", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
+            "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
+            "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 25R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+        };
+    
+        const residuosPorCantidad = [
+            "Batería 4 DLT 4D",
+            "Batería Ácido Plomo 25R",
+            "Batería Ácido Plomo 31-30H",
+            "Batería Ácido Plomo 65-G4-27",
+            "Batería UPS"
+        ];
+    
+        tipoSelect.addEventListener("change", function () {
+            const tipoSeleccionado = tipoSelect.value;
+            const residuos = residuosPorTipo[tipoSeleccionado] || [];
+    
+            // Limpiar opciones
+            residuoSelect.innerHTML = '<option value="">Seleccione</option>';
+    
+            // Cargar nuevas
+            residuos.forEach(function (residuo) {
+                const option = document.createElement("option");
+                option.value = residuo;
+                option.textContent = residuo;
+                residuoSelect.appendChild(option);
+            });
+        });
+    
+        // Cambiar label según residuo
+        residuoSelect.addEventListener("change", function () {
+            const residuoSeleccionado = residuoSelect.value;
+            console.log("Residuo seleccionado:", residuoSeleccionado);
+            console.log("Precios disponibles:", preciosResiduos);
+
+            const labelPeso = document.querySelector('label[for="peso"]');
+            const inputPeso = document.getElementById("peso");
+    
+            if (residuosPorCantidad.includes(residuoSeleccionado)) {
+                labelPeso.textContent = "Cantidad";
+                inputPeso.placeholder = "Ingrese la cantidad...";
+                inputPeso.step = "1";
+            } else {
+                labelPeso.textContent = "Peso";
+                inputPeso.placeholder = "Ingrese el peso...";
+                inputPeso.step = "0.01";
+            }
+
+            const precio = preciosResiduos[residuoSeleccionado];
+            const mensajeDiv = document.querySelector("#costo_unitario ~ .mensaje"); // Selecciona el div.mensaje adyacente al input
+
+            if (precio !== undefined && costoUnitario) {
+                costoUnitario.value = formatearMiles(precio);
+                calcularCostoTotal();
+                mensajeDiv.innerText = "";  // Limpia el mensaje anterior si todo está bien
+            } else {
+                costoUnitario.value = "";
+                costoTotal.value = "";
+                mensajeDiv.innerText = "No se encontró el precio en la BD para el residuo seleccionado.";
+                mensajeDiv.style.color = "red"; // Opcional para resaltar
+            }
+
+        });
+    });
+
+
+    
+</script>
+{% endblock %}

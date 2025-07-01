@@ -1,0 +1,47 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg letra header">
+    <div class="container-fluid main-container">
+        <a class="navbar-brand" href="">
+            <img src="{% static 'img/logosao.png' %}" alt="Logo" width="200px" height="200px" class="d-inline-block align-text-top">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText"
+            aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 d-flex justify-content-between align-items-center">
+
+                {% if user.username != '1112629169' %}
+                    <a href="{% url 'formularioResiduos' %}" class="link-header"><b>Agregar</b></a>
+                    {% if user.username != '1036619811' %}
+                        <a href="{% url 'registrosVigilantes' %}" class="link-header"><b>Mis registros</b></a>
+                    {% else %}
+                        
+
+                        <div class="dropdown" >
+                            <a class="dropdown-toggle link-header" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                              <b>Listados</b>
+                            </a>
+                          
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <li> <a href="{% url 'registrosSergio' %}" class="link-header">Mis registros</a> </li> 
+                                <li> <a href="{% url 'listadoResiduosPrecio' %}" class="link-header">Precios</a> </li>                
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                {% if user.username == '1112629169' %}
+                    <a href="{% url 'listadoAutorizaciones' %}" class="link-header"><b>Listado Autorizaciones</b></a>
+                {% endif %}
+
+                
+
+                <a href="{% url 'logout' %}" class="link-header ms-3"><b>Cerrar sesión</b></a>
+            </ul>
+        </div>
+    </div>
+</nav>

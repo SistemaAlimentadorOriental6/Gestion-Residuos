@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5" style="min-height: 50vh;">
+
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-dark">Registros de Residuos</h4>
+        <p class="text-muted">Usuario: <strong>{{ user.get_full_name }}</strong></p>
+    </div>
+
+    {% if messages %}
+        <div class="d-flex justify-content-center mt-3">
+            <div style="width: 100%; max-width: 600px;">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card rounded-card">
+        <div class="card-header brand-header">
+            <h5 class="mb-0 text-center">Listado de Registros</h5>
+        </div>
+
+        <div class="card-body p-0">
+            {% if registros %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr class="text-center">
+                                <th class="text-nowrap">Fecha</th>
+                                <th class="text-nowrap">Hora</th>
+                                <th class="text-nowrap">Tipo Residuo</th>
+                                <th class="text-nowrap">Residuo</th>
+                                <th class="text-nowrap">Peso / Cantidad</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for registro in registros %}
+                                <tr class="text-center">
+                                    <td class="text-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
+                                    <td class="text-nowrap">{{ registro.hora }}</td> 
+                                    <td class="text-nowrap">{{ registro.tipo_residuo }}</td>
+                                    <td class="text-nowrap">{{ registro.residuo }}</td>
+                                    <td class="text-nowrap">{{ registro.peso_cantidad }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

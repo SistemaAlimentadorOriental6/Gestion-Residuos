@@ -1,0 +1,19 @@
+.boton{
+    border: 2px solid black;
+    color: white;
+    background-color: #6ba43a;
+}
+
+.boton:hover {
+    background-color: #a8b999;
+    color: black;
+    border: 2px solid black;
+}   
+
+
+
+.boton-mas{
+    border: 2px solid #6ba43a;
+    background-color: #6ba43a;
+    color: white;
+}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Formulario Agregar Residuos y Precio{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="container mt-5">
+
+        
+
+
+        <div class="row justify-content-center">
+
+            <span class="navbar-text text-center">
+                <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
+            </span>
+
+            <div class="form-container">
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <h5 class="text-center mt-3 mb-2">Registrar Residuo y Precio</h5>
+        
+                    {% if messages %}
+                        <div class="d-flex justify-content-center mt-3">
+                            <div style="width: 100%; max-width: 600px;">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+
+                        <div class="col-sm-12 col-md-6 col-lg-12">
+                            <label for="tipo_residuo" class="form-label">Tipo de Residuo</label>
+                            <select id="tipo_residuo" name="tipo_residuo" class="form-select borde-input" required>
+                                <option value="">Seleccione</option>
+                                <option value="Aprovechable">Aprovechable</option>
+                                <option value="Especial">Especial</option>
+                                <option value="Respel">Respel</option>
+                                <option value="Respel Aprovechable">Respel Aprovechable</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-12 col-md-12 col-lg-12">
+                            <label for="residuo" class="form-label">Residuo</label>
+                            <input type="text" id="residuo" name="residuo" class="form-control borde-input">
+                        </div>
+                        
+                        <div class="col-sm-12 col-md-12 col-lg-12">
+                            <label for="costo_unitario" class="form-label">Costo Unitario</label>
+                            <input type="text" step="0.01" id="costo_unitario" name="costo_unitario" class="form-control borde-input" required>
+                        </div>
+                        
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-light mt-4" id="boton-enviar">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    function formatearMiles(valor) {
+        // Elimina cualquier carácter que no sea número
+        valor = valor.toString().replace(/\D/g, '');
+        // Aplica puntos cada tres cifras
+        return valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+    
+    // Evento para formatear mientras el usuario escribe
+    const costo_unitario = document.getElementById("costo_unitario");
+    
+    costo_unitario.addEventListener("input", function (e) {
+        const valorSinPuntos = e.target.value.replace(/\D/g, '');
+        e.target.value = formatearMiles(valorSinPuntos);
+    });
+    
+    // Si necesitas inicializar con valor formateado:
+    costo_unitario.value = formatearMiles(costo_unitario.value);
+
+</script>
+
+
+{% endblock %}
