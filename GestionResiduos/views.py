@@ -332,7 +332,7 @@ def generarExcel(request, registro_id):
         wb = Workbook()
         ws = wb.active
         ws.title = "Consolidados"
-        encabezados = ["Tipo_Residuo", "Residuo", "Fecha", "Hora", "Peso / Cantidad", "Costo Total"]
+        encabezados = ["Tipo_Residuo", "Residuo", "Fecha", "Peso / Cantidad", "Costo Total"]
 
         estilo = {
             "fill": PatternFill(start_color="6BA43A", end_color="6BA43A", fill_type="solid"),
@@ -345,7 +345,6 @@ def generarExcel(request, registro_id):
             cell.fill = estilo["fill"]
             cell.font = estilo["font"]
             cell.alignment = estilo["alignment"]
-            ws.column_dimensions[get_column_letter(col_num)].width = len(encabezado) + 5
 
         wb.save(file_path)
 
@@ -354,23 +353,21 @@ def generarExcel(request, registro_id):
     registros_guardados = set()
 
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if row[1] and row[2] and row[3]:  
-            registros_guardados.add((row[1], row[2], row[3]))
+        if row[1] and row[2]:  # residuo y fecha
+            registros_guardados.add((row[1], row[2]))  # clave sin hora
 
     fila_excel = ws.max_row + 1
     for reg in registros:
         fecha_str = reg.fecha.strftime('%d-%m-%y')
-        hora_str = reg.fecha.strftime('%H:%M')
-        clave = (reg.residuo, fecha_str, hora_str)
+        clave = (reg.residuo, fecha_str)
 
         if clave in registros_guardados:
-            continue 
+            continue
 
         fila = [
             reg.tipo_residuo,
             reg.residuo,
             fecha_str,
-            hora_str,
             float(reg.peso_cantidad),
             float(reg.costo_total)
         ]
@@ -378,10 +375,22 @@ def generarExcel(request, registro_id):
         for col_idx, valor in enumerate(fila, 1):
             cell = ws.cell(row=fila_excel, column=col_idx, value=valor)
             cell.alignment = Alignment(horizontal="center")
-            if col_idx in [5, 6]:
+            if col_idx in [4, 5]:
                 cell.number_format = '#,##0.00'
 
         fila_excel += 1
+
+    # Ajustar ancho de columnas según contenido
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column  # número de columna
+        column_letter = get_column_letter(column)
+
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+
+        ws.column_dimensions[column_letter].width = max_length + 2
 
     wb.save(file_path)
 

@@ -49,8 +49,8 @@ GestionResiduos/
 El sistema gestiona los registros de las salidas mediante las siguientes tablas principales:
 - `residuo_precio`: Almacena el tipo de residuo, el residuo y su precio.
 - `grupo_residuo`: Almacena el código que se genera para unir los formularios.
-- `formulario_perfil1`: Almacena la información ingresada por la persona encargada de entrega el residuo.
-- `formulario_perfil2`: Almacena la información ingresada por la persona encargada de entrega el residuo.
+- `formulario_perfil1`: Almacena la información ingresada por la persona encargada de entregar el residuo.
+- `formulario_perfil2`: Almacena la información ingresada por la persona encargada de confirmar la entrega del residuo.
 
 
 ### Creación de la Base de Datos
@@ -137,7 +137,7 @@ Se recomienda realizar backups cada 15 días (o semanalmente si hay un alto volu
 ## Instalación y Configuración
 1. Clona el repositorio:
    ```bash
-   git clone https://github.com/JhonatanUsugaSao6/Control-Activos
+   git clone https://github.com/JhonatanUsugaSao6/Gestion-Residuos-.git
    ```
 2. Instala las dependencias:
    ```bash
