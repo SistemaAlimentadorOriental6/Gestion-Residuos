@@ -48,16 +48,16 @@ GestionResiduos/
 ## Base de Datos
 El sistema gestiona los registros de las salidas mediante las siguientes tablas principales:
 - `residuo_precio`: Almacena el tipo de residuo, el residuo y su precio.
-- `grupo_residuo`: Almacena el código que se genera para unir los formularios.
+- `grupo_residuo`: Almacena el código de grupo que se genera para unir los formularios enviados por los usuarios.
 - `formulario_perfil1`: Almacena la información ingresada por la persona encargada de entregar el residuo.
-- `formulario_perfil2`: Almacena la información ingresada por la persona encargada de confirmar la entrega del residuo.
+- `formulario_perfil2`: Almacena la información ingresada por la persona encargada de confirmar la entrega del residuo (personal de vigilancia).
 
 
 ### Creación de la Base de Datos
 ```sql
-CREATE DATABASE controlactivos;
+CREATE DATABASE gestionresiduos;
 
-USE controlactivos;
+USE gestionresiduos;
 
 CREATE TABLE `validacion_tri` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -146,15 +146,6 @@ Se recomienda realizar backups cada 15 días (o semanalmente si hay un alto volu
     DEBUG = True o False
 
     ALLOWED_HOSTS = localhost, 127.0.0.1
-
-    # Base de datos SQL Server (Siesa)
-    ENGINE_SQL=tu-engine-siesa
-    NAME_SQL=tu-tabla
-    USER_SQL=tu-usuario
-    PASSWORD_SQL=tu-contraseña
-    HOST_SQL=tu-host
-    PORT_SQL=tu-puerto
-    DRIVER=tu-drive-odbc
 
     # Base de datos MySQL (Default)
     ENGINE_MYSQL=tu-engine
