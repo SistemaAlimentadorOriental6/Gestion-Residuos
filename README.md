@@ -14,11 +14,11 @@ El sistema está desarrollado con el framework **Django** siguiendo el patrón *
 - **Plantillas**: Manejan la presentación con HTML, CSS y Bootstrap.
 
 ## Tecnologías utilizadas
-- **Backend**: Django 5.1.5, Django Templates, Django ORM, Asgiref 3.8.1, sqlparse 0.5.3
+- **Backend**: Django 5.2.3, Django Templates, Django ORM, Asgiref 3.8.1, sqlparse 0.5.3
 - **Frontend**: Bootstrap, HTML5, CSS3, JavaScript, AJAX
 - **Base de Datos**: MySQL con mysqlclient y pyodbc
 - **Seguridad**: Middleware de Django, autenticación y protección CSRF
-- **Manejo de archivos**: Configuración de archivos estáticos y multimedia con Pillow y tzdata
+- **Manejo de archivos**: Configuración de archivos estáticos y multimedia con tzdata
 
 ## Estructura del Proyecto
 El proyecto se organiza en carpetas siguiendo la estructura de Django:
