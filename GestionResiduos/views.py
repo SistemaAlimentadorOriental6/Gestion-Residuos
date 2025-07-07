@@ -18,6 +18,7 @@ from django.conf import settings
 import os
 from openpyxl.utils import get_column_letter
 from django.db.models.functions import ExtractMonth, ExtractYear
+from decimal import Decimal
 
 
 
@@ -43,31 +44,51 @@ def formularioResiduos(request):
     if request.method == 'POST':
         tipo_residuo = request.POST.get('tipo')
         residuo = request.POST.get('residuo')
-        peso_cantidad = request.POST.get('peso') 
+
+        # 🟡 Leer campos peso y cantidad
+        peso_raw = request.POST.get('peso')
+        cantidad_raw = request.POST.get('cantidad')
+
+        # 🟡 Parseo seguro
+        peso = Decimal(peso_raw.replace(',', '.')) if peso_raw else Decimal('0')
+        cantidad = int(cantidad_raw) if cantidad_raw else 0
 
         if es_sergio:
+            # 🟢 Convertir valores con puntos de miles
             costo_unitario = int(request.POST.get('costo_unitario', '0').replace('.', '').replace(',', ''))
             costo_total = int(request.POST.get('costo_total', '0').replace('.', '').replace(',', ''))
 
             FormularioPerfil1.objects.create(
                 tipo_residuo=tipo_residuo,
                 residuo=residuo,
-                peso_cantidad=peso_cantidad,
+                peso=peso,
+                cantidad=cantidad,
                 costo_unitario=costo_unitario,
                 costo_total=costo_total,
                 grupo_codigo=grupo,
                 usuario=request.user
             )
+
+            # Guardar precio si es nuevo
+            if not ResiduoPrecio.objects.filter(residuo=residuo).exists():
+                ResiduoPrecio.objects.create(
+                    tipo_residuo=tipo_residuo,
+                    residuo=residuo,
+                    costo_unitario=costo_unitario
+                )
+
         else:
+            # 🟡 FormularioPerfil2 debe adaptarse igual que Perfil1 si necesita campos separados
             FormularioPerfil2.objects.create(
                 tipo_residuo=tipo_residuo,
                 residuo=residuo,
-                peso_cantidad=peso_cantidad,
+                peso=peso,
+                cantidad=cantidad,
                 grupo_codigo=grupo,
                 usuario=request.user
             )
 
-        # ✅ Verificar si ambos formularios existen
+        # ✅ Marcar grupo como completo si ambos formularios fueron creados
         perfil1_ok = FormularioPerfil1.objects.filter(grupo_codigo=grupo).exists()
         perfil2_ok = FormularioPerfil2.objects.filter(grupo_codigo=grupo).exists()
 
@@ -77,11 +98,9 @@ def formularioResiduos(request):
 
         messages.success(request, "Residuo guardado exitosamente.")
         return redirect('formularioResiduos')
-    
+
     residuos_precios = ResiduoPrecio.objects.all()
     precios_dict = {r.residuo: r.costo_unitario for r in residuos_precios}
-    
-    # Pasar a JSON seguro para JS
     precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
 
     return render(request, 'Residuos/formulario.html', {
@@ -113,13 +132,15 @@ def listadoAutorizaciones(request):
         for r in registros_p1:
             key = r.residuo.lower().strip()
             modo = 'cantidad' if any(k in key for k in baterias_keywords) else 'peso'
-            residuos_data[key]['perfil1'] += r.peso_cantidad  # usa campo 'peso' aunque signifique cantidad
+            valor_p1 = r.cantidad if modo == 'cantidad' else float(r.peso or 0)
+            residuos_data[key]['perfil1'] += valor_p1
             residuos_data[key]['modo'] = modo
 
         for r in registros_p2:
             key = r.residuo.lower().strip()
             modo = 'cantidad' if any(k in key for k in baterias_keywords) else 'peso'
-            residuos_data[key]['perfil2'] += r.peso_cantidad
+            valor_p2 = r.cantidad if modo == 'cantidad' else float(r.peso or 0)
+            residuos_data[key]['perfil2'] += valor_p2
             residuos_data[key]['modo'] = modo
 
         diferencias = []
@@ -294,15 +315,31 @@ def actualizarResiduoPrecio(request, id):
 @login_required
 def actualizarCostoTotal(request, registro_id):
     registro = get_object_or_404(FormularioPerfil1, id=registro_id)
-    try:
-        nuevo_valor = int(request.POST.get('costo_total', '0').replace('.', '').replace(',', ''))
-        registro.costo_total = nuevo_valor
-        registro.save()
-        messages.success(request, "Costo total actualizado correctamente.")
-    except Exception as e:
-        messages.error(request, f"Error al actualizar: {str(e)}")
-    return redirect('registrosSergio')
 
+    if request.method == 'POST':
+        try:
+            campo = request.POST.get('campo_modificado')
+
+            costo_raw = request.POST.get('costo_total', '').replace('.', '').replace(',', '.')
+            nuevo_costo = float(costo_raw) if costo_raw else 0
+
+            peso_raw = request.POST.get('peso', '')
+            peso_val = float(peso_raw.replace('.', '').replace(',', '.')) if peso_raw else 0
+
+            if campo == 'peso':
+                registro.peso = peso_val
+                registro.costo_total = round(peso_val * registro.costo_unitario)
+
+            elif campo == 'costo_total':
+                registro.costo_total = round(nuevo_costo)
+
+            registro.save()
+            messages.success(request, "Registro actualizado correctamente.")
+
+        except Exception as e:
+            messages.error(request, f"Error al actualizar: {str(e)}")
+
+    return redirect('registrosSergio')
 
 
 
@@ -332,7 +369,7 @@ def generarExcel(request, registro_id):
         wb = Workbook()
         ws = wb.active
         ws.title = "Consolidados"
-        encabezados = ["Tipo_Residuo", "Residuo", "Fecha", "Peso / Cantidad", "Costo Total"]
+        encabezados = ["Tipo_Residuo", "Residuo", "Fecha", "Peso", "Cantidad", "Costo_Unitario", "Costo_Total"]
 
         estilo = {
             "fill": PatternFill(start_color="6BA43A", end_color="6BA43A", fill_type="solid"),
@@ -368,15 +405,17 @@ def generarExcel(request, registro_id):
             reg.tipo_residuo,
             reg.residuo,
             fecha_str,
-            float(reg.peso_cantidad),
+            float(reg.peso),
+            float(reg.cantidad),
+            float(reg.costo_unitario),
             float(reg.costo_total)
         ]
 
         for col_idx, valor in enumerate(fila, 1):
             cell = ws.cell(row=fila_excel, column=col_idx, value=valor)
             cell.alignment = Alignment(horizontal="center")
-            if col_idx in [4, 5]:
-                cell.number_format = '#,##0.00'
+            if col_idx in [6, 7]:  # Costo_Unitario y Costo_Total
+                cell.number_format = '#,##0'    
 
         fila_excel += 1
 

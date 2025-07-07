@@ -71,9 +71,17 @@
 
 
 
-                        <div class="col-sm-12 col-md-12 col-lg-12">
+                        <div id="campo-peso" class="col-sm-12 col-md-12 col-lg-12">
                             <label for="peso" class="form-label">Peso</label>
-                            <input type="number" step="0.01" id="peso" name="peso" class="form-control borde-input" required>
+                            <input type="number" id="peso" step="0.01" id="peso" name="peso" class="form-control borde-input">
+                            <div id="error-peso" class="text-danger mt-1 small"></div>
+                        </div>
+
+
+                        <div id="campo-cantidad" class="col-sm-12 col-md-12 col-lg-12" style="display: none;">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input type="number" step="1" id="cantidad" name="cantidad" class="form-control borde-input" placeholder="Ingrese la cantidad">
+                            <div id="error-cantidad" class="text-danger mt-1 small"></div>
                         </div>
 
                 
@@ -162,10 +170,10 @@
         const residuoSelect = document.getElementById("residuo");
     
         const residuosPorTipo = {
-            "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidon 55 - KG", "Bidon 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
-            "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Madera - MT3", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
+            "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - KG", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
+            "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
             "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
-            "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 25R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+            "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
         };
     
         const residuosPorCantidad = [
@@ -192,15 +200,26 @@
             });
         });
     
-        // Cambiar label según residuo
         residuoSelect.addEventListener("change", function () {
             const residuoSeleccionado = residuoSelect.value;
             console.log("Residuo seleccionado:", residuoSeleccionado);
             console.log("Precios disponibles:", preciosResiduos);
-
+        
             const labelPeso = document.querySelector('label[for="peso"]');
             const inputPeso = document.getElementById("peso");
-    
+            const campoPeso = document.getElementById("campo-peso"); // Asegúrate de que exista un contenedor con este ID
+            const campoCantidad = document.getElementById("campo-cantidad");
+        
+            // Mostrar u ocultar campo "cantidad" y "peso" si contiene la palabra "batería"
+            if (residuoSeleccionado.toLowerCase().includes("batería")) {
+                campoCantidad.style.display = "block";
+                campoPeso.style.display = "none"; // Ocultar campo peso
+            } else {
+                campoCantidad.style.display = "none";
+                campoPeso.style.display = "block"; // Mostrar campo peso
+            }
+        
+            // Cambiar el label del campo peso si está en la lista de residuos que se miden por cantidad
             if (residuosPorCantidad.includes(residuoSeleccionado)) {
                 labelPeso.textContent = "Cantidad";
                 inputPeso.placeholder = "Ingrese la cantidad...";
@@ -210,24 +229,55 @@
                 inputPeso.placeholder = "Ingrese el peso...";
                 inputPeso.step = "0.01";
             }
-
+        
+            // Lógica de carga automática del costo unitario
             const precio = preciosResiduos[residuoSeleccionado];
-            const mensajeDiv = document.querySelector("#costo_unitario ~ .mensaje"); // Selecciona el div.mensaje adyacente al input
-
+            const mensajeDiv = document.querySelector("#costo_unitario ~ .mensaje");
+        
             if (precio !== undefined && costoUnitario) {
                 costoUnitario.value = formatearMiles(precio);
                 calcularCostoTotal();
-                mensajeDiv.innerText = "";  // Limpia el mensaje anterior si todo está bien
+                mensajeDiv.innerText = "";
             } else {
                 costoUnitario.value = "";
                 costoTotal.value = "";
                 mensajeDiv.innerText = "No se encontró el precio en la BD para el residuo seleccionado.";
-                mensajeDiv.style.color = "red"; // Opcional para resaltar
+                mensajeDiv.style.color = "red";
             }
-
         });
-    });
 
+        const form = document.querySelector("form");
+
+        form.addEventListener("submit", function (event) {
+            const residuoSeleccionado = residuoSelect.value.toLowerCase();
+            const esBateria = residuoSeleccionado.includes("batería");
+    
+            const pesoVal = parseFloat(peso.value);
+            const cantidadVal = parseInt(document.getElementById("cantidad").value);
+    
+            // Limpiar mensajes anteriores
+            document.getElementById("error-peso").innerText = "";
+            document.getElementById("error-cantidad").innerText = "";
+    
+            let hayError = false;
+    
+            if (esBateria && (!cantidadVal || cantidadVal <= 0)) {
+                document.getElementById("error-cantidad").innerText = "Debe ingresar una cantidad válida para residuos tipo batería.";
+                hayError = true;
+            }
+    
+            if (!esBateria && (!pesoVal || pesoVal <= 0)) {
+                document.getElementById("error-peso").innerText = "Debe ingresar un peso válido para este residuo.";
+                hayError = true;
+            }
+    
+            if (hayError) {
+                event.preventDefault();
+            }
+        });
+
+        
+    });
 
     
 </script>

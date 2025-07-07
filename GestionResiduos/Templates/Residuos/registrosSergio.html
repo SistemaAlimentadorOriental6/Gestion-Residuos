@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="container mt-5" style="min-height: 50vh;">
-
     <div class="text-center mb-4">
         <h4 class="fw-bold text-dark">Registros de Residuos</h4>
         <p class="text-muted">Usuario: <strong>{{ user.get_full_name }}</strong></p>
@@ -26,73 +24,123 @@
             <h5 class="mb-0 text-center">Listado de Registros</h5>
         </div>
 
-        <div class="card-body p-0">
+        <div class="card-body px-3">
             {% if registros %}
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr class="text-center">
-                                <th class="text-nowrap">Fecha</th>
-                                <th class="text-nowrap">Hora</th>
-                                <th class="text-nowrap">Tipo Residuo</th>
-                                <th class="text-nowrap">Residuo</th>
-                                <th class="text-nowrap">Peso / Cantidad</th>
-                                <th class="text-nowrap">Costo Unitario</th>
-                                <th class="text-nowrap">Costo Total</th>        
-                                <th class="text-nowrap">Excel</th>                 
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for registro in registros %}
-                                <tr class="text-center">                              
-                                    <td class="text-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
-                                    <td class="text-nowrap">{{ registro.hora }}</td> 
-                                    <td class="text-nowrap">{{ registro.tipo_residuo }}</td>
-                                    <td class="text-nowrap">{{ registro.residuo }}</td>
-                                    <td class="text-nowrap">{{ registro.peso_cantidad }}</td>
-                                    <td class="text-nowrap" data-formatear="miles">{{ registro.costo_unitario }}</td>
+            <div class="table-responsive" style="max-width: 1200px; margin: 0 auto;">
+                <table class="table table-hover mb-0 text-center align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Tipo Residuo</th>
+                            <th>Residuo</th>
+                            <th>Costo Unitario</th>
+                            <th>Cantidad</th>
+                            <th>Peso</th>
+                            <th>Costo Total</th>
+                            <th>Excel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in registros %}
+                        <tr>
+                            <td>{{ registro.fecha|date:"d/m/Y" }}</td>
+                            <td>{{ registro.hora }}</td>
+                            <td>{{ registro.tipo_residuo }}</td>
+                            <td>{{ registro.residuo }}</td>
+                            <td data-formatear="miles">{{ registro.costo_unitario }}</td>
+                            <td>{{ registro.cantidad }}</td>
 
-                                    <td class="text-nowrap" data-formatear="miles">
-                                        <form method="POST" action="{% url 'actualizarCostoTotal' registro.id %}" class="d-flex justify-content-center align-items-center">
-                                            {% csrf_token %}
-                                            <input type="text" data-formatear="miles" name="costo_total" value="{{ registro.costo_total }}" class="form-control form-control-sm text-end" style="width: auto; min-width: 60px; ; max-width: 100px; flex-shrink: 1;" oninput="formatearInput(this)">
-                                            <button type="submit" class="btn btn-sm btn-primary ms-1" id="boton-enviar">💾</button>
-                                        </form>
-                                    </td>
+                            <td colspan="2">
+                                <form method="POST" action="{% url 'actualizarCostoTotal' registro.id %}" class="d-flex align-items-center gap-2">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="campo_modificado" value="">
+                            
+                                    <input 
+                                        type="text" 
+                                        name="peso" 
+                                        value="{{ registro.peso }}" 
+                                        class="form-control form-control-sm text-end peso-input" 
+                                        style="width: 80px;"
+                                        data-costo-unitario="{{ registro.costo_unitario }}"
+                                        oninput="calcularCostoTotal(this)"
+                                    >
+                            
+                                    <input 
+                                        type="text" 
+                                        name="costo_total" 
+                                        value="{{ registro.costo_total }}" 
+                                        class="form-control form-control-sm text-end costo-input" 
+                                        style="width: 100px;" 
+                                        data-formatear="miles"
+                                        oninput="formatearInput(this)"
+                                    >
+                            
+                                    <button type="submit" class="btn btn-sm btn-primary" id="boton-enviar">💾</button>
+                                </form>
+                            </td>
 
-                                    <td class="text-nowrap">
-                                        <a href="{% url 'generarExcel' registro.id %}">
-                                            <i class="fas fa-file-excel btn btn-sm btn-success ms-1" title="Descargar Excel" id="boton-enviar"></i>
-                                        </a>
-                                    </td>
-
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                            <td>
+                                <a href="{% url 'generarExcel' registro.id %}">
+                                    <i class="fas fa-file-excel btn btn-sm btn-success ms-1" id="boton-enviar" title="Descargar Excel" style="width: 40px; height: 33px"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-                <div class="p-4 text-center text-muted">
-                    <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
-                </div>
+            <div class="p-4 text-center text-muted">
+                <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-
 <script>
-    function formatearInput(input) {
-        let valor = input.value.replace(/\D/g, '');
-        input.value = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    function desformatear(str) {
+        str = str.trim();
+        if (str.includes(',')) {
+            str = str.replace(/\./g, '').replace(',', '.'); // Coma como decimal
+        } else {
+            str = str.replace(/\./g, '');
+        }
+        return parseFloat(str) || 0;
     }
-
+    
+    function formatearMiles(num) {
+        const partes = num.toString().split('.');
+        partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return partes.join(',');
+    }
+    
+    function formatearInput(input) {
+        const valorNumerico = desformatear(input.value);
+        if (!isNaN(valorNumerico)) {
+            input.value = formatearMiles(valorNumerico.toFixed(0)); // No decimales para costo
+        }
+        const campoModificado = input.closest('form').querySelector('input[name="campo_modificado"]');
+        campoModificado.value = 'costo_total';
+    }
+    
+    function calcularCostoTotal(input) {
+        const costoUnitario = desformatear(input.dataset.costoUnitario);
+        const valor = desformatear(input.value);
+        const form = input.closest('form');
+        const totalInput = form.querySelector('.costo-input');
+        const campoModificado = form.querySelector('input[name="campo_modificado"]');
+    
+        const total = valor * costoUnitario;
+        if (!isNaN(total)) {
+            totalInput.value = formatearMiles(total.toFixed(0));
+        }
+    
+        campoModificado.value = 'peso';
+    }
+    
     document.addEventListener("DOMContentLoaded", function () {
-        const formatearMiles = valor => {
-            return valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        };
-
-        // Formatear las celdas
         const columnas = document.querySelectorAll("td[data-formatear='miles']");
         columnas.forEach(td => {
             const valor = td.textContent.replace(/\./g, '').trim();
@@ -100,14 +148,12 @@
                 td.textContent = formatearMiles(Number(valor));
             }
         });
-
-        // Formatear los inputs al cargar
+    
         const inputs = document.querySelectorAll("input[data-formatear='miles']");
         inputs.forEach(input => {
-            input.value = formatearMiles(input.value.replace(/\D/g, ''));
+            const num = desformatear(input.value);
+            input.value = formatearMiles(num.toFixed(0));
         });
     });
-
-    </script>
-
+</script>
 {% endblock %}

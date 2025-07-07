@@ -47,7 +47,13 @@
                         {% for registro in grupo.formularioperfil1_set.all %}
                             <li class="list-group-item">
                                 {{ registro.tipo_residuo }} - {{ registro.residuo }} |
-                                {{ registro.peso_cantidad }} 
+                                {% if registro.peso %}
+                                    <b>Peso: </b>{{ registro.peso }} 
+                                {% elif registro.cantidad %}
+                                    <b>Cantidad: </b>{{ registro.cantidad }} 
+                                {% else %}
+                                    <b>Sin valor</b>
+                                {% endif %}
                             </li>
                             
                         {% empty %}
@@ -62,7 +68,13 @@
                         {% for registro in grupo.formularioperfil2_set.all %}
                             <li class="list-group-item">
                                 {{ registro.tipo_residuo }} - {{ registro.residuo }} |
-                                {{ registro.peso_cantidad }} 
+                                {% if registro.peso %}
+                                    <b>Peso: </b>{{ registro.peso }} 
+                                {% elif registro.cantidad %}
+                                    <b>Cantidad: </b>{{ registro.cantidad }} 
+                                {% else %}
+                                    <b>Sin valor</b>
+                                {% endif %}
                             </li>
                         {% empty %}
                             <li class="list-group-item">No hay registros.</li>
