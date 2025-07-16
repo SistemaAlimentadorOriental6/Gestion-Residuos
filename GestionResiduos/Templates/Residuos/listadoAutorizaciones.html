@@ -42,9 +42,10 @@
                 {% endfor %}
 
                 <div class="mb-4">
-                    <h6 class="text-secondary">Residuo Registrado por Sergio:</h6>
+                    {% for registro in grupo.formularioperfil1_set.all %}
+                    <h6 class="text-secondary">Residuo Registrado por SGI: {{ registro.fecha|date:"d/m/Y" }} - {{ registro.hora }} </h6>
                     <ul class="list-group borde-input">
-                        {% for registro in grupo.formularioperfil1_set.all %}
+                        
                             <li class="list-group-item">
                                 {{ registro.tipo_residuo }} - {{ registro.residuo }} |
                                 {% if registro.peso %}
@@ -63,9 +64,10 @@
                 </div>
 
                 <div class="mb-4">
-                    <h6 class="text-secondary">Residuo Registrado por Vigilancia:</h6>
+                    {% for registro in grupo.formularioperfil2_set.all %}
+                    <h6 class="text-secondary">Residuo Registrado por Vigilancia: {{ registro.fecha|date:"d/m/Y" }} - {{ registro.hora }} </h6>
                     <ul class="list-group borde-input">
-                        {% for registro in grupo.formularioperfil2_set.all %}
+                        
                             <li class="list-group-item">
                                 {{ registro.tipo_residuo }} - {{ registro.residuo }} |
                                 {% if registro.peso %}

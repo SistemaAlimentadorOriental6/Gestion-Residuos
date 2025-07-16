@@ -1,9 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="container mt-5" style="min-height: 50vh;">
-
     <div class="text-center mb-4">
         <h4 class="fw-bold text-dark">Registros de Residuos</h4>
         <p class="text-muted">Usuario: <strong>{{ user.get_full_name }}</strong></p>
@@ -21,46 +19,173 @@
         </div>
     {% endif %}
 
+    <!-- Filtros -->
+    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4 mb-3">
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroTipo" class="form-label fw-bold">Filtrar por tipo</label>
+            <select id="filtroTipo" class="form-select border-dark">
+                <option value="">Todos los tipos</option>
+                <option value="Aprovechable">Aprovechable</option>
+                <option value="Especial">Especial</option>
+                <option value="Respel">Respel</option>
+                <option value="Respel Aprovechable">Respel Aprovechable</option>
+            </select>
+        </div>
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroMes" class="form-label fw-bold">Filtrar por mes</label>
+            <select id="filtroMes" class="form-select border-dark">
+                <option value="">Todos los meses</option>
+            </select>
+        </div>
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroFecha" class="form-label fw-bold">Filtrar por fecha exacta</label>
+            <select id="filtroFecha" class="form-select border-dark">
+                <option value="">Todas las fechas</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla -->
     <div class="card rounded-card">
         <div class="card-header brand-header">
             <h5 class="mb-0 text-center">Listado de Registros</h5>
         </div>
-
         <div class="card-body p-0">
             {% if registros %}
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr class="text-center">
-                                <th class="text-nowrap">Fecha</th>
-                                <th class="text-nowrap">Hora</th>
-                                <th class="text-nowrap">Tipo Residuo</th>
-                                <th class="text-nowrap">Residuo</th>
-                                <th class="text-nowrap">Peso</th>
-                                <th class="text-nowrap">Cantidad</th>
-                                
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for registro in registros %}
-                                <tr class="text-center">
-                                    <td class="text-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
-                                    <td class="text-nowrap">{{ registro.hora }}</td> 
-                                    <td class="text-nowrap">{{ registro.tipo_residuo }}</td>
-                                    <td class="text-nowrap">{{ registro.residuo }}</td>
-                                    <td class="text-nowrap">{{ registro.peso }}</td>
-                                    <td class="text-nowrap">{{ registro.cantidad }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>#</th>
+                            <th class="text-nowrap">Fecha</th>
+                            <th class="text-nowrap">Hora</th>
+                            <th class="text-nowrap">Tipo Residuo</th>
+                            <th class="text-nowrap">Residuo</th>
+                            <th class="text-nowrap">Peso</th>
+                            <th class="text-nowrap">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in registros %}
+                        <tr class="text-center fila-registro"
+                            data-tipo="{{ registro.tipo_residuo }}"
+                            data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
+                            <td><b> {{ forloop.counter }} </b></td> 
+                            <td class="text-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
+                            <td class="text-nowrap">{{ registro.hora }}</td>
+                            <td class="text-nowrap">{{ registro.tipo_residuo }}</td>
+                            <td class="text-nowrap">{{ registro.residuo }}</td>
+                            <td class="text-nowrap">{{ registro.peso }}</td>
+                            <td class="text-nowrap">{{ registro.cantidad }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% else %}
-                <div class="p-4 text-center text-muted">
-                    <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
-                </div>
+            <div class="p-4 text-center text-muted">
+                <i class="bi bi-info-circle-fill"></i> No hay grupos pendientes por autorizar.
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const filtroTipo = document.getElementById("filtroTipo");
+        const filtroMes = document.getElementById("filtroMes");
+        const filtroFecha = document.getElementById("filtroFecha");
+    
+        const filas = document.querySelectorAll("tbody tr");
+    
+        const mesesSet = new Set();
+        const fechasSet = new Set();
+    
+        filas.forEach(fila => {
+            const fechaTexto = fila.children[1].textContent.trim(); 
+            const [d, m, y] = fechaTexto.split('/');
+            const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            const mesISO = `${y}-${m.padStart(2, '0')}`;
+    
+            fechasSet.add(fechaISO);
+            mesesSet.add(mesISO);
+        });
+    
+        const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
+        const mesesOrdenados = Array.from(mesesSet).sort().reverse();
+    
+        fechasOrdenadas.forEach(fecha => {
+            const option = document.createElement("option");
+            option.value = fecha;
+    
+            const [anio, mes, dia] = fecha.split('-');
+            const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
+            const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
+    
+            option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+            filtroFecha.appendChild(option);
+        });
+    
+        mesesOrdenados.forEach(mes => {
+            const option = document.createElement("option");
+            option.value = mes;
+            const [año, mesNum] = mes.split("-");
+            const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
+                month: "long",
+                year: "numeric"
+            });
+            option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+            filtroMes.appendChild(option);
+        });
+    
+        function aplicarFiltros(fechaInicial = null) {
+            const tipoSeleccionado = filtroTipo.value.toLowerCase();
+            const mesSeleccionado = filtroMes.value;
+            const fechaSeleccionada = fechaInicial || filtroFecha.value;
+    
+            filas.forEach(fila => {
+                const tipo = fila.children[3].textContent.trim().toLowerCase();
+                const fechaTexto = fila.children[1].textContent.trim(); 
+                const [d, m, y] = fechaTexto.split('/');
+                const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    
+                const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
+                const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
+                const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
+    
+                let mostrar = false;
+    
+                if (fechaSeleccionada) {
+                    mostrar = coincideTipo && coincideFecha;
+                } else if (mesSeleccionado) {
+                    mostrar = coincideTipo && coincideMes;
+                } else {
+                    mostrar = coincideTipo;
+                }
+    
+                fila.style.display = mostrar ? "" : "none";
+            });
+        }
+    
+        if (fechasOrdenadas.length > 0) {
+            const fechaMasReciente = fechasOrdenadas[0];
+            filtroFecha.value = fechaMasReciente;
+            aplicarFiltros(fechaMasReciente);
+        }
+    
+        filtroTipo.addEventListener("change", () => aplicarFiltros());
+    
+        filtroMes.addEventListener("change", () => {
+            filtroFecha.value = "";
+            aplicarFiltros();
+        });
+    
+        filtroFecha.addEventListener("change", () => {
+            filtroMes.value = "";
+            aplicarFiltros();
+        });
+});
+</script>
+
 {% endblock %}

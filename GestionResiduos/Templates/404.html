@@ -1,0 +1,15 @@
+{% extends "error_base.html" %}
+{% block title %}Página no encontrada{% endblock %}
+{% block content %}
+    <h2>Página no encontrada</h2>
+    <p>Lo sentimos, no pudimos encontrar la página que estás buscando.</p>
+    <p>Serás redirigido a la página anterior</p>
+    <script>
+        setTimeout(function () {
+            window.history.back();
+        }, 5000); 
+    </script>
+    <noscript>
+        <a href="javascript:history.back()">Volver a la página anterior</a>
+    </noscript>
+{% endblock %}

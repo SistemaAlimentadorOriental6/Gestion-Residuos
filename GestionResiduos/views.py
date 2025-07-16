@@ -32,29 +32,63 @@ def inicio(request):
 def formularioResiduos(request):
     es_sergio = request.user.username == '1036619811'
 
-    grupo = GrupoResiduo.objects.filter(completado=False).first()
-    if not grupo:
-        fecha_hora = localtime(now()).strftime('%Y%m%d%H%M%S')
-        codigo = f"GRP-{request.user.id}-{fecha_hora}"
-        grupo = GrupoResiduo.objects.create(
-            codigo=codigo,
-            creado_por=request.user
-        )
+    TOLERANCIA_PESO = Decimal('10.0')
+    TOLERANCIA_CANTIDAD = 5
+
+    grupo = None
 
     if request.method == 'POST':
         tipo_residuo = request.POST.get('tipo')
         residuo = request.POST.get('residuo')
 
-        # 🟡 Leer campos peso y cantidad
         peso_raw = request.POST.get('peso')
         cantidad_raw = request.POST.get('cantidad')
 
-        # 🟡 Parseo seguro
         peso = Decimal(peso_raw.replace(',', '.')) if peso_raw else Decimal('0')
         cantidad = int(cantidad_raw) if cantidad_raw else 0
 
+        # Buscar grupo compatible
+        posibles_grupos = GrupoResiduo.objects.filter(completado=False)
+
+        for posible in posibles_grupos:
+            existe_1 = FormularioPerfil1.objects.filter(grupo_codigo=posible).exists()
+            existe_2 = FormularioPerfil2.objects.filter(grupo_codigo=posible).exists()
+
+            if es_sergio and not existe_1:
+                perfil2 = FormularioPerfil2.objects.filter(
+                    grupo_codigo=posible,
+                    tipo_residuo=tipo_residuo,
+                    residuo=residuo
+                ).first()
+                if perfil2 and abs(perfil2.peso - peso) <= TOLERANCIA_PESO and abs(perfil2.cantidad - cantidad) <= TOLERANCIA_CANTIDAD:
+                    grupo = posible
+                    break
+
+            elif not es_sergio and not existe_2:
+                perfil1 = FormularioPerfil1.objects.filter(
+                    grupo_codigo=posible,
+                    tipo_residuo=tipo_residuo,
+                    residuo=residuo
+                ).first()
+                if perfil1 and abs(perfil1.peso - peso) <= TOLERANCIA_PESO and abs(perfil1.cantidad - cantidad) <= TOLERANCIA_CANTIDAD:
+                    grupo = posible
+                    break
+
+        # Si no se encontró grupo compatible
+        if not grupo:
+            if es_sergio:
+                messages.error(request, "No se encontró un grupo compatible. Verifica que el vigilante haya registrado el residuo primero.")
+                return redirect('formularioResiduos')
+            else:
+                fecha_hora = localtime(now()).strftime('%Y%m%d%H%M%S')
+                codigo = f"GRP-{request.user.id}-{fecha_hora}"
+                grupo = GrupoResiduo.objects.create(
+                    codigo=codigo,
+                    creado_por=request.user
+                )
+
+        # Guardar formulario
         if es_sergio:
-            # 🟢 Convertir valores con puntos de miles
             costo_unitario = int(request.POST.get('costo_unitario', '0').replace('.', '').replace(',', ''))
             costo_total = int(request.POST.get('costo_total', '0').replace('.', '').replace(',', ''))
 
@@ -69,16 +103,13 @@ def formularioResiduos(request):
                 usuario=request.user
             )
 
-            # Guardar precio si es nuevo
             if not ResiduoPrecio.objects.filter(residuo=residuo).exists():
                 ResiduoPrecio.objects.create(
                     tipo_residuo=tipo_residuo,
                     residuo=residuo,
                     costo_unitario=costo_unitario
                 )
-
         else:
-            # 🟡 FormularioPerfil2 debe adaptarse igual que Perfil1 si necesita campos separados
             FormularioPerfil2.objects.create(
                 tipo_residuo=tipo_residuo,
                 residuo=residuo,
@@ -88,7 +119,7 @@ def formularioResiduos(request):
                 usuario=request.user
             )
 
-        # ✅ Marcar grupo como completo si ambos formularios fueron creados
+        # Verificar si el grupo está completo
         perfil1_ok = FormularioPerfil1.objects.filter(grupo_codigo=grupo).exists()
         perfil2_ok = FormularioPerfil2.objects.filter(grupo_codigo=grupo).exists()
 
@@ -99,17 +130,37 @@ def formularioResiduos(request):
         messages.success(request, "Residuo guardado exitosamente.")
         return redirect('formularioResiduos')
 
-    residuos_precios = ResiduoPrecio.objects.all()
-    precios_dict = {r.residuo: r.costo_unitario for r in residuos_precios}
-    precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
+    
+    else:
+        # GET: preparación de datos
+        residuos_precios = ResiduoPrecio.objects.all()
+        precios_dict = {r.residuo: r.costo_unitario for r in residuos_precios}
+        precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
 
-    return render(request, 'Residuos/formulario.html', {
-        'es_sergio': es_sergio,
-        'grupo_codigo': grupo.codigo,
-        'precios_residuos_json': precios_json
-    })
+        grupos_pendientes = []
+        if es_sergio:
+            grupos_incompletos = GrupoResiduo.objects.filter(
+                completado=False,
+                formularioperfil1__isnull=True,
+                formularioperfil2__isnull=False
+            ).distinct()
 
+            for grupo in grupos_incompletos:
+                registro_vigilancia = FormularioPerfil2.objects.filter(grupo_codigo=grupo).first()
+                if registro_vigilancia:
+                    grupos_pendientes.append({
+                        'codigo': grupo.codigo,
+                        'fecha': registro_vigilancia.fecha,
+                        'tipo': registro_vigilancia.tipo_residuo,
+                        'residuo': registro_vigilancia.residuo,
+                    })
 
+        return render(request, 'Residuos/formulario.html', {
+            'es_sergio': es_sergio,
+            'grupo_codigo': "",
+            'precios_residuos_json': precios_json,
+            'grupos_pendientes': grupos_pendientes
+        })
 
 
 
@@ -121,7 +172,7 @@ def listadoAutorizaciones(request):
     grupos = GrupoResiduo.objects.filter(completado=True).exclude(autorizacionsalida__isnull=False)
     grupos_alerta = []
 
-    baterias_keywords = ['bateria', 'batería']
+    baterias_keywords = ['bateria', 'batería', 'und']
 
     for grupo in grupos:
         registros_p1 = grupo.formularioperfil1_set.all()
@@ -440,3 +491,8 @@ def generarExcel(request, registro_id):
         )
         response['Content-Disposition'] = f'inline; filename="{nombre_archivo}"'
         return response
+    
+    
+    
+    
+    

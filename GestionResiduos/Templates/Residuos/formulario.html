@@ -13,9 +13,29 @@
 
         <div class="row justify-content-center">
 
+            {% if grupos_pendientes %}
+                
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+                        <div>
+                            {% for g in grupos_pendientes %}
+
+                            <strong>Grupo pendiente:</strong> {{ g.codigo }}<br>
+                            <strong>Fecha:</strong> {{ g.fecha|date:"d/m/Y" }}<br>
+                            <strong>Tipo:</strong> {{ g.tipo }}<br>
+                            <strong>Residuo:</strong> {{ g.residuo }}<br><br>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                
+            {% endif %}
+
+
             <span class="navbar-text text-center">
                 <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
             </span>
+
+
 
             <div class="form-container">
                 
@@ -210,13 +230,12 @@
             const campoPeso = document.getElementById("campo-peso"); // Asegúrate de que exista un contenedor con este ID
             const campoCantidad = document.getElementById("campo-cantidad");
         
-            // Mostrar u ocultar campo "cantidad" y "peso" si contiene la palabra "batería"
-            if (residuoSeleccionado.toLowerCase().includes("batería")) {
+            if (residuoSeleccionado.toLowerCase().includes("batería") || residuoSeleccionado.toUpperCase().includes("UND")) {
                 campoCantidad.style.display = "block";
-                campoPeso.style.display = "none"; // Ocultar campo peso
+                campoPeso.style.display = "none";
             } else {
                 campoCantidad.style.display = "none";
-                campoPeso.style.display = "block"; // Mostrar campo peso
+                campoPeso.style.display = "block";
             }
         
             // Cambiar el label del campo peso si está en la lista de residuos que se miden por cantidad
@@ -250,7 +269,7 @@
 
         form.addEventListener("submit", function (event) {
             const residuoSeleccionado = residuoSelect.value.toLowerCase();
-            const esBateria = residuoSeleccionado.includes("batería");
+            const esPorCantidad = residuoSeleccionado.includes("batería") || residuoSeleccionado.toUpperCase().includes("UND");
     
             const pesoVal = parseFloat(peso.value);
             const cantidadVal = parseInt(document.getElementById("cantidad").value);
@@ -261,13 +280,13 @@
     
             let hayError = false;
     
-            if (esBateria && (!cantidadVal || cantidadVal <= 0)) {
-                document.getElementById("error-cantidad").innerText = "Debe ingresar una cantidad válida para residuos tipo batería.";
+            if (esPorCantidad && (!cantidadVal || cantidadVal <= 0)) {
+                document.getElementById("error-cantidad").innerText = "Debe ingresar una cantidad válida.";
                 hayError = true;
             }
-    
-            if (!esBateria && (!pesoVal || pesoVal <= 0)) {
-                document.getElementById("error-peso").innerText = "Debe ingresar un peso válido para este residuo.";
+            
+            if (!esPorCantidad && (!pesoVal || pesoVal <= 0)) {
+                document.getElementById("error-peso").innerText = "Debe ingresar un peso válido.";
                 hayError = true;
             }
     

@@ -1,0 +1,17 @@
+
+
+{% extends "error_base.html" %}
+{% block title %}Error del servidor{% endblock %}
+{% block content %}
+     <h1>Error!!!</h1>
+    <p>Hubo un error con el sistema.</p>
+    <p>Serás redirigido a la página anterior.</p>
+    <script>
+        setTimeout(function () {
+            window.history.back();
+        }, 5000); 
+    </script>
+    <noscript>
+        <a href="javascript:history.back()">Volver a la página anterior</a>
+    </noscript>
+{% endblock %}

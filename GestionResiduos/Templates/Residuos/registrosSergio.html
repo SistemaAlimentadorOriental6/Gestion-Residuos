@@ -19,6 +19,39 @@
         </div>
     {% endif %}
 
+    
+
+    <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4 mb-3">
+
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroTipo" class="form-label fw-bold">Filtrar por tipo</label>
+            <select id="filtroTipo" class="form-select border-dark">
+                <option value="">Todos los tipos</option>
+                <option value="Aprovechable">Aprovechable</option>
+                <option value="Especial">Especial</option>
+                <option value="Respel">Respel</option>
+                <option value="Respel Aprovechable">Respel Aprovechable</option>
+            </select>
+        </div>
+    
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroMes" class="form-label fw-bold">Filtrar por mes</label>
+            <select id="filtroMes" class="form-select border-dark">
+                <option value="">Todos los meses</option>
+            </select>
+        </div>
+    
+        <div class="w-100" style="max-width: 300px;">
+            <label for="filtroFecha" class="form-label fw-bold">Filtrar por fecha exacta</label>
+            <select id="filtroFecha" class="form-select border-dark">
+                <option value="">Todas las fechas</option>
+            </select>
+        </div>
+    
+    </div>
+
+    
+
     <div class="card rounded-card">
         <div class="card-header brand-header">
             <h5 class="mb-0 text-center">Listado de Registros</h5>
@@ -30,6 +63,7 @@
                 <table class="table table-hover mb-0 text-center align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>#</th>
                             <th>Fecha</th>
                             <th>Hora</th>
                             <th>Tipo Residuo</th>
@@ -43,7 +77,8 @@
                     </thead>
                     <tbody>
                         {% for registro in registros %}
-                        <tr>
+                        <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
+                            <td><b> {{ forloop.counter }} </b></td> 
                             <td>{{ registro.fecha|date:"d/m/Y" }}</td>
                             <td>{{ registro.hora }}</td>
                             <td>{{ registro.tipo_residuo }}</td>
@@ -103,7 +138,7 @@
     function desformatear(str) {
         str = str.trim();
         if (str.includes(',')) {
-            str = str.replace(/\./g, '').replace(',', '.'); // Coma como decimal
+            str = str.replace(/\./g, '').replace(',', '.'); 
         } else {
             str = str.replace(/\./g, '');
         }
@@ -119,7 +154,7 @@
     function formatearInput(input) {
         const valorNumerico = desformatear(input.value);
         if (!isNaN(valorNumerico)) {
-            input.value = formatearMiles(valorNumerico.toFixed(0)); // No decimales para costo
+            input.value = formatearMiles(valorNumerico.toFixed(0)); 
         }
         const campoModificado = input.closest('form').querySelector('input[name="campo_modificado"]');
         campoModificado.value = 'costo_total';
@@ -153,6 +188,99 @@
         inputs.forEach(input => {
             const num = desformatear(input.value);
             input.value = formatearMiles(num.toFixed(0));
+        });
+    
+        const filtroTipo = document.getElementById("filtroTipo");
+        const filtroMes = document.getElementById("filtroMes");
+        const filtroFecha = document.getElementById("filtroFecha");
+    
+        const filas = document.querySelectorAll("tbody tr");
+    
+        const mesesSet = new Set();
+        const fechasSet = new Set();
+    
+        filas.forEach(fila => {
+            const fechaTexto = fila.children[1].textContent.trim(); 
+            const [d, m, y] = fechaTexto.split('/');
+            const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            const mesISO = `${y}-${m.padStart(2, '0')}`;
+    
+            fechasSet.add(fechaISO);
+            mesesSet.add(mesISO);
+        });
+    
+        const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
+        const mesesOrdenados = Array.from(mesesSet).sort().reverse();
+    
+        fechasOrdenadas.forEach(fecha => {
+            const option = document.createElement("option");
+            option.value = fecha;
+    
+            const [anio, mes, dia] = fecha.split('-');
+            const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
+            const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
+    
+            option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+            filtroFecha.appendChild(option);
+        });
+    
+        mesesOrdenados.forEach(mes => {
+            const option = document.createElement("option");
+            option.value = mes;
+            const [año, mesNum] = mes.split("-");
+            const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
+                month: "long",
+                year: "numeric"
+            });
+            option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+            filtroMes.appendChild(option);
+        });
+    
+        function aplicarFiltros(fechaInicial = null) {
+            const tipoSeleccionado = filtroTipo.value.toLowerCase();
+            const mesSeleccionado = filtroMes.value;
+            const fechaSeleccionada = fechaInicial || filtroFecha.value;
+    
+            filas.forEach(fila => {
+                const tipo = fila.children[3].textContent.trim().toLowerCase();
+                const fechaTexto = fila.children[1].textContent.trim(); 
+                const [d, m, y] = fechaTexto.split('/');
+                const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    
+                const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
+                const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
+                const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
+    
+                let mostrar = false;
+    
+                if (fechaSeleccionada) {
+                    mostrar = coincideTipo && coincideFecha;
+                } else if (mesSeleccionado) {
+                    mostrar = coincideTipo && coincideMes;
+                } else {
+                    mostrar = coincideTipo;
+                }
+    
+                fila.style.display = mostrar ? "" : "none";
+            });
+        }
+    
+        if (fechasOrdenadas.length > 0) {
+            const fechaMasReciente = fechasOrdenadas[0];
+            filtroFecha.value = fechaMasReciente;
+            aplicarFiltros(fechaMasReciente);
+        }
+    
+        filtroTipo.addEventListener("change", () => aplicarFiltros());
+    
+        filtroMes.addEventListener("change", () => {
+            filtroFecha.value = "";
+            aplicarFiltros();
+        });
+    
+        filtroFecha.addEventListener("change", () => {
+            filtroMes.value = "";
+            aplicarFiltros();
         });
     });
 </script>
