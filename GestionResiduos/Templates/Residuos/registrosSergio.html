@@ -19,10 +19,8 @@
         </div>
     {% endif %}
 
-    
-
+    <!-- Filtros -->
     <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4 mb-3">
-
         <div class="w-100" style="max-width: 300px;">
             <label for="filtroTipo" class="form-label fw-bold">Filtrar por tipo</label>
             <select id="filtroTipo" class="form-select border-dark">
@@ -33,34 +31,29 @@
                 <option value="Respel Aprovechable">Respel Aprovechable</option>
             </select>
         </div>
-    
         <div class="w-100" style="max-width: 300px;">
             <label for="filtroMes" class="form-label fw-bold">Filtrar por mes</label>
             <select id="filtroMes" class="form-select border-dark">
                 <option value="">Todos los meses</option>
             </select>
         </div>
-    
         <div class="w-100" style="max-width: 300px;">
             <label for="filtroFecha" class="form-label fw-bold">Filtrar por fecha exacta</label>
             <select id="filtroFecha" class="form-select border-dark">
                 <option value="">Todas las fechas</option>
             </select>
         </div>
-    
     </div>
 
-    
-
+    <!-- Tabla -->
     <div class="card rounded-card">
         <div class="card-header brand-header">
             <h5 class="mb-0 text-center">Listado de Registros</h5>
         </div>
-
-        <div class="card-body px-3">
+        <div class="card-body p-0">
             {% if registros %}
-            <div class="table-responsive" style="max-width: 1200px; margin: 0 auto;">
-                <table class="table table-hover mb-0 text-center align-middle">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -69,59 +62,62 @@
                             <th>Tipo Residuo</th>
                             <th>Residuo</th>
                             <th>Costo Unitario</th>
-                            <th>Cantidad</th>
                             <th>Peso</th>
+                            <th>Cantidad</th>
                             <th>Costo Total</th>
-                            <th>Excel</th>
+                            <th>Guardar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for registro in registros %}
-                        <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
-                            <td><b> {{ forloop.counter }} </b></td> 
-                            <td>{{ registro.fecha|date:"d/m/Y" }}</td>
-                            <td>{{ registro.hora }}</td>
-                            <td>{{ registro.tipo_residuo }}</td>
-                            <td>{{ registro.residuo }}</td>
-                            <td data-formatear="miles">{{ registro.costo_unitario }}</td>
-                            <td>{{ registro.cantidad }}</td>
+                        <form method="POST" action="{% url 'actualizarCostoTotal' registro.id %}" class="d-flex align-items-center gap-2">
+                            {% csrf_token %}
+                            <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
+                                <td><b>{{ forloop.counter }}</b></td>
+                                <td>{{ registro.fecha|date:"d/m/Y" }}</td>
+                                <td>{{ registro.hora }}</td>
+                                
+                                <td>
+                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark">
+                                        <option {% if registro.tipo_residuo == "Aprovechable" %}selected{% endif %}>Aprovechable</option>
+                                        <option {% if registro.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
+                                        <option {% if registro.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
+                                        <option {% if registro.tipo_residuo == "Respel Aprovechable" %}selected{% endif %}>Respel Aprovechable</option>
+                                    </select>
+                                </td>
+                        
+                                <td>
+                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo">
+                                        <option value="{{ registro.residuo }}">{{ registro.residuo }}</option>
+                                    </select>
+                                </td>
+                                
+                                <td>
+                                    <input name="costo_unitario" value="{{ registro.costo_unitario }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
 
-                            <td colspan="2">
-                                <form method="POST" action="{% url 'actualizarCostoTotal' registro.id %}" class="d-flex align-items-center gap-2">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="campo_modificado" value="">
-                            
-                                    <input 
-                                        type="text" 
-                                        name="peso" 
-                                        value="{{ registro.peso }}" 
-                                        class="form-control form-control-sm text-end peso-input" 
-                                        style="width: 80px;"
-                                        data-costo-unitario="{{ registro.costo_unitario }}"
-                                        oninput="calcularCostoTotal(this)"
-                                    >
-                            
-                                    <input 
-                                        type="text" 
-                                        name="costo_total" 
-                                        value="{{ registro.costo_total }}" 
-                                        class="form-control form-control-sm text-end costo-input" 
-                                        style="width: 100px;" 
-                                        data-formatear="miles"
-                                        oninput="formatearInput(this)"
-                                    >
-                            
+                                <td>
+                                    <input name="peso" value="{{ registro.peso }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+
+                                <td>
+                                    <input name="cantidad" value="{{ registro.cantidad }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+
+                                <td>
+                                    <input name="costo_total" value="{{ registro.costo_total }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+                        
+                                <td>
                                     <button type="submit" class="btn btn-sm btn-primary" id="boton-enviar">💾</button>
-                                </form>
-                            </td>
+                                </td>
+                                
+                            </tr>
+                        </form>
 
-                            <td>
-                                <a href="{% url 'generarExcel' registro.id %}">
-                                    <i class="fas fa-file-excel btn btn-sm btn-success ms-1" id="boton-enviar" title="Descargar Excel" style="width: 40px; height: 33px"></i>
-                                </a>
-                            </td>
-                        </tr>
                         {% endfor %}
+                            
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -135,153 +131,182 @@
 </div>
 
 <script>
-    function desformatear(str) {
-        str = str.trim();
-        if (str.includes(',')) {
-            str = str.replace(/\./g, '').replace(',', '.'); 
-        } else {
-            str = str.replace(/\./g, '');
-        }
-        return parseFloat(str) || 0;
-    }
-    
-    function formatearMiles(num) {
-        const partes = num.toString().split('.');
-        partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        return partes.join(',');
-    }
-    
-    function formatearInput(input) {
-        const valorNumerico = desformatear(input.value);
-        if (!isNaN(valorNumerico)) {
-            input.value = formatearMiles(valorNumerico.toFixed(0)); 
-        }
-        const campoModificado = input.closest('form').querySelector('input[name="campo_modificado"]');
-        campoModificado.value = 'costo_total';
-    }
-    
-    function calcularCostoTotal(input) {
-        const costoUnitario = desformatear(input.dataset.costoUnitario);
-        const valor = desformatear(input.value);
-        const form = input.closest('form');
-        const totalInput = form.querySelector('.costo-input');
-        const campoModificado = form.querySelector('input[name="campo_modificado"]');
-    
-        const total = valor * costoUnitario;
-        if (!isNaN(total)) {
-            totalInput.value = formatearMiles(total.toFixed(0));
-        }
-    
-        campoModificado.value = 'peso';
-    }
-    
+
     document.addEventListener("DOMContentLoaded", function () {
-        const columnas = document.querySelectorAll("td[data-formatear='miles']");
-        columnas.forEach(td => {
-            const valor = td.textContent.replace(/\./g, '').trim();
-            if (!isNaN(valor)) {
-                td.textContent = formatearMiles(Number(valor));
+        const inputs = document.querySelectorAll('input[name="costo_unitario"], input[name="costo_total"]');
+    
+        inputs.forEach(input => {
+            // Formatear cuando escribe
+            input.addEventListener("input", function (e) {
+                const cursorPos = input.selectionStart;
+    
+                let valorSinFormato = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+                if (!valorSinFormato) return input.value = '';
+    
+                let valorFormateado = new Intl.NumberFormat('es-CO').format(Number(valorSinFormato));
+                input.value = valorFormateado;
+    
+                // Reubicar cursor al final
+                input.setSelectionRange(input.value.length, input.value.length);
+            });
+    
+            // Al cargar, también aplicar formato si tiene valor
+            if (input.value) {
+                let valorInicial = input.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+                input.value = new Intl.NumberFormat('es-CO').format(Number(valorInicial));
             }
         });
-    
-        const inputs = document.querySelectorAll("input[data-formatear='miles']");
-        inputs.forEach(input => {
-            const num = desformatear(input.value);
-            input.value = formatearMiles(num.toFixed(0));
-        });
-    
-        const filtroTipo = document.getElementById("filtroTipo");
-        const filtroMes = document.getElementById("filtroMes");
-        const filtroFecha = document.getElementById("filtroFecha");
-    
-        const filas = document.querySelectorAll("tbody tr");
-    
-        const mesesSet = new Set();
-        const fechasSet = new Set();
-    
-        filas.forEach(fila => {
-            const fechaTexto = fila.children[1].textContent.trim(); 
-            const [d, m, y] = fechaTexto.split('/');
-            const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            const mesISO = `${y}-${m.padStart(2, '0')}`;
-    
-            fechasSet.add(fechaISO);
-            mesesSet.add(mesISO);
-        });
-    
-        const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
-        const mesesOrdenados = Array.from(mesesSet).sort().reverse();
-    
-        fechasOrdenadas.forEach(fecha => {
-            const option = document.createElement("option");
-            option.value = fecha;
-    
-            const [anio, mes, dia] = fecha.split('-');
-            const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
-            const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
-    
-            option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-            filtroFecha.appendChild(option);
-        });
-    
-        mesesOrdenados.forEach(mes => {
-            const option = document.createElement("option");
-            option.value = mes;
-            const [año, mesNum] = mes.split("-");
-            const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
-                month: "long",
-                year: "numeric"
-            });
-            option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
-            filtroMes.appendChild(option);
-        });
-    
-        function aplicarFiltros(fechaInicial = null) {
-            const tipoSeleccionado = filtroTipo.value.toLowerCase();
-            const mesSeleccionado = filtroMes.value;
-            const fechaSeleccionada = fechaInicial || filtroFecha.value;
-    
+    });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const filtroTipo = document.getElementById("filtroTipo");
+            const filtroMes = document.getElementById("filtroMes");
+            const filtroFecha = document.getElementById("filtroFecha");
+        
+            const filas = document.querySelectorAll("tbody tr");
+        
+            const mesesSet = new Set();
+            const fechasSet = new Set();
+        
             filas.forEach(fila => {
-                const tipo = fila.children[3].textContent.trim().toLowerCase();
                 const fechaTexto = fila.children[1].textContent.trim(); 
                 const [d, m, y] = fechaTexto.split('/');
                 const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    
-                const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
-                const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
-                const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
-    
-                let mostrar = false;
-    
-                if (fechaSeleccionada) {
-                    mostrar = coincideTipo && coincideFecha;
-                } else if (mesSeleccionado) {
-                    mostrar = coincideTipo && coincideMes;
-                } else {
-                    mostrar = coincideTipo;
-                }
-    
-                fila.style.display = mostrar ? "" : "none";
+                const mesISO = `${y}-${m.padStart(2, '0')}`;
+        
+                fechasSet.add(fechaISO);
+                mesesSet.add(mesISO);
             });
-        }
-    
-        if (fechasOrdenadas.length > 0) {
-            const fechaMasReciente = fechasOrdenadas[0];
-            filtroFecha.value = fechaMasReciente;
-            aplicarFiltros(fechaMasReciente);
-        }
-    
-        filtroTipo.addEventListener("change", () => aplicarFiltros());
-    
-        filtroMes.addEventListener("change", () => {
-            filtroFecha.value = "";
-            aplicarFiltros();
+        
+            const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
+            const mesesOrdenados = Array.from(mesesSet).sort().reverse();
+        
+            fechasOrdenadas.forEach(fecha => {
+                const option = document.createElement("option");
+                option.value = fecha;
+        
+                const [anio, mes, dia] = fecha.split('-');
+                const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
+                const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
+        
+                option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+                filtroFecha.appendChild(option);
+            });
+        
+            mesesOrdenados.forEach(mes => {
+                const option = document.createElement("option");
+                option.value = mes;
+                const [año, mesNum] = mes.split("-");
+                const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
+                    month: "long",
+                    year: "numeric"
+                });
+                option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+                filtroMes.appendChild(option);
+            });
+        
+            function aplicarFiltros(fechaInicial = null) {
+                const tipoSeleccionado = filtroTipo.value.toLowerCase();
+                const mesSeleccionado = filtroMes.value;
+                const fechaSeleccionada = fechaInicial || filtroFecha.value;
+        
+                filas.forEach(fila => {
+                    const tipo = fila.children[3].textContent.trim().toLowerCase();
+                    const fechaTexto = fila.children[1].textContent.trim(); 
+                    const [d, m, y] = fechaTexto.split('/');
+                    const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        
+                    const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
+                    const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
+                    const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
+        
+                    let mostrar = false;
+        
+                    if (fechaSeleccionada) {
+                        mostrar = coincideTipo && coincideFecha;
+                    } else if (mesSeleccionado) {
+                        mostrar = coincideTipo && coincideMes;
+                    } else {
+                        mostrar = coincideTipo;
+                    }
+        
+                    fila.style.display = mostrar ? "" : "none";
+                });
+            }
+        
+            if (fechasOrdenadas.length > 0) {
+                const fechaMasReciente = fechasOrdenadas[0];
+                filtroFecha.value = fechaMasReciente;
+                aplicarFiltros(fechaMasReciente);
+            }
+        
+            filtroTipo.addEventListener("change", () => aplicarFiltros());
+        
+            filtroMes.addEventListener("change", () => {
+                filtroFecha.value = "";
+                aplicarFiltros();
+            });
+        
+            filtroFecha.addEventListener("change", () => {
+                filtroMes.value = "";
+                aplicarFiltros();
+            });
+
+            const inputsNumericos = document.querySelectorAll("input[name='peso']");
+
+            inputsNumericos.forEach(input => {
+                const valor = input.value.trim();
+
+                if (!isNaN(valor) && valor !== "") {
+                    const numero = parseFloat(valor);
+
+                    const formateado = numero
+                        .toFixed(2)               
+                        .replace('.', ',');      
+
+                    input.value = formateado;
+                }
+            });
+
+            const residuosPorTipo = {
+                "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - KG", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
+                "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
+                "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
+                "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+            };
+            
+            // Inicializar selects de cada fila
+            document.querySelectorAll("tr.fila-registro").forEach(fila => {
+                const tipoSelect = fila.querySelector("select[name='tipo_residuo']");
+                const residuoSelect = fila.querySelector("select[name='residuo']");
+                const residuoActual = "{{ registro.residuo|escapejs }}"; // Django no puede interpolar por cada fila, lo haremos más abajo
+            
+                // Función para cargar residuos por tipo
+                const cargarResiduos = (tipo, residuoSeleccionado = null) => {
+                    const lista = residuosPorTipo[tipo] || [];
+            
+                    lista.forEach(residuo => {
+                        const option = document.createElement("option");
+                        option.value = residuo;
+                        option.textContent = residuo;
+                        if (residuo === residuoSeleccionado) {
+                            option.selected = true;
+                        }
+                        residuoSelect.appendChild(option);
+                    });
+                };
+            
+                // Cargar residuos según el tipo actual
+                const tipoActual = tipoSelect.value;
+                const residuoOriginal = fila.querySelector("input[name='residuo_original']")?.value;
+                cargarResiduos(tipoActual, residuoOriginal);
+            
+                // Al cambiar el tipo
+                tipoSelect.addEventListener("change", () => {
+                    cargarResiduos(tipoSelect.value);
+                });
+            });
         });
-    
-        filtroFecha.addEventListener("change", () => {
-            filtroMes.value = "";
-            aplicarFiltros();
-        });
-    });
 </script>
+
 {% endblock %}

@@ -31,8 +31,7 @@ SECRET_KEY = 'django-insecure-t8pt9*da6w2ao+_vbwvmy6nwdg13)gin34jl+@19s4!sz0z!3_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Application definition
 
@@ -135,6 +134,11 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'GestionResiduos/Public',
 ]
+
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_ROOT = BASE_DIR / 'mediafiles'
+
 
 LOGIN_URL = reverse_lazy('login')
 

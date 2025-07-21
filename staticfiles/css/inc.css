@@ -1,0 +1,31 @@
+.titulo-header{
+    text-align: center;
+    color: #6ba43a;
+}
+
+.header{
+    background-color: white;
+    border-bottom: 3px solid #6ba43a; 
+}
+
+.footer{
+    background-color: white;
+    border-top: 3px solid #6ba43a; 
+    
+}
+
+.link-header {
+    color: #6ba43a;
+    font-size: 20px;
+    text-decoration: none;        
+    font-weight: 500;
+    padding: 8px 12px;
+    margin: 0 6px;
+    border-radius: 8px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.link-header:hover {
+    background-color: #6ba43a;
+    color: white;
+}   

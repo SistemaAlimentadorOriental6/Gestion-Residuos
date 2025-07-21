@@ -55,30 +55,59 @@
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
-                        <tr class="text-center">
+                        <tr>
                             <th>#</th>
-                            <th class="text-nowrap">Fecha</th>
-                            <th class="text-nowrap">Hora</th>
-                            <th class="text-nowrap">Tipo Residuo</th>
-                            <th class="text-nowrap">Residuo</th>
-                            <th class="text-nowrap">Peso</th>
-                            <th class="text-nowrap">Cantidad</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Tipo Residuo</th>
+                            <th>Residuo</th>
+                            <th>Peso</th>
+                            <th>Cantidad</th>
+                            <th>Guardar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for registro in registros %}
-                        <tr class="text-center fila-registro"
-                            data-tipo="{{ registro.tipo_residuo }}"
-                            data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
-                            <td><b> {{ forloop.counter }} </b></td> 
-                            <td class="text-nowrap">{{ registro.fecha|date:"d/m/Y" }}</td>
-                            <td class="text-nowrap">{{ registro.hora }}</td>
-                            <td class="text-nowrap">{{ registro.tipo_residuo }}</td>
-                            <td class="text-nowrap">{{ registro.residuo }}</td>
-                            <td class="text-nowrap">{{ registro.peso }}</td>
-                            <td class="text-nowrap">{{ registro.cantidad }}</td>
-                        </tr>
+                        <form method="POST" action="{% url 'actualizarRegistroVigilante' registro.id %}" class="d-flex align-items-center gap-2">
+                            {% csrf_token %}
+                            <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
+                                <td><b>{{ forloop.counter }}</b></td>
+                                <td>{{ registro.fecha|date:"d/m/Y" }}</td>
+                                <td>{{ registro.hora }}</td>
+                                
+                                <td>
+                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark">
+                                        <option {% if registro.tipo_residuo == "Aprovechable" %}selected{% endif %}>Aprovechable</option>
+                                        <option {% if registro.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
+                                        <option {% if registro.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
+                                        <option {% if registro.tipo_residuo == "Respel Aprovechable" %}selected{% endif %}>Respel Aprovechable</option>
+                                    </select>
+                                </td>
+                        
+                                <td>
+                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo">
+                                        <option value="{{ registro.residuo }}">{{ registro.residuo }}</option>
+                                    </select>
+                                </td>
+                        
+                                <td>
+                                    <input name="peso" value="{{ registro.peso }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+                        
+                                <td>
+                                    <input name="cantidad" value="{{ registro.cantidad }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+                        
+                                <td>
+                                    <button type="submit" class="btn btn-sm btn-primary" id="boton-enviar">💾</button>
+                                </td>
+                                
+                            </tr>
+                        </form>
+
                         {% endfor %}
+                            
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -92,100 +121,158 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const filtroTipo = document.getElementById("filtroTipo");
-        const filtroMes = document.getElementById("filtroMes");
-        const filtroFecha = document.getElementById("filtroFecha");
-    
-        const filas = document.querySelectorAll("tbody tr");
-    
-        const mesesSet = new Set();
-        const fechasSet = new Set();
-    
-        filas.forEach(fila => {
-            const fechaTexto = fila.children[1].textContent.trim(); 
-            const [d, m, y] = fechaTexto.split('/');
-            const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            const mesISO = `${y}-${m.padStart(2, '0')}`;
-    
-            fechasSet.add(fechaISO);
-            mesesSet.add(mesISO);
-        });
-    
-        const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
-        const mesesOrdenados = Array.from(mesesSet).sort().reverse();
-    
-        fechasOrdenadas.forEach(fecha => {
-            const option = document.createElement("option");
-            option.value = fecha;
-    
-            const [anio, mes, dia] = fecha.split('-');
-            const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
-            const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
-    
-            option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
-            filtroFecha.appendChild(option);
-        });
-    
-        mesesOrdenados.forEach(mes => {
-            const option = document.createElement("option");
-            option.value = mes;
-            const [año, mesNum] = mes.split("-");
-            const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
-                month: "long",
-                year: "numeric"
-            });
-            option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
-            filtroMes.appendChild(option);
-        });
-    
-        function aplicarFiltros(fechaInicial = null) {
-            const tipoSeleccionado = filtroTipo.value.toLowerCase();
-            const mesSeleccionado = filtroMes.value;
-            const fechaSeleccionada = fechaInicial || filtroFecha.value;
-    
+        document.addEventListener("DOMContentLoaded", function () {
+            const filtroTipo = document.getElementById("filtroTipo");
+            const filtroMes = document.getElementById("filtroMes");
+            const filtroFecha = document.getElementById("filtroFecha");
+        
+            const filas = document.querySelectorAll("tbody tr");
+        
+            const mesesSet = new Set();
+            const fechasSet = new Set();
+        
             filas.forEach(fila => {
-                const tipo = fila.children[3].textContent.trim().toLowerCase();
                 const fechaTexto = fila.children[1].textContent.trim(); 
                 const [d, m, y] = fechaTexto.split('/');
                 const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    
-                const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
-                const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
-                const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
-    
-                let mostrar = false;
-    
-                if (fechaSeleccionada) {
-                    mostrar = coincideTipo && coincideFecha;
-                } else if (mesSeleccionado) {
-                    mostrar = coincideTipo && coincideMes;
-                } else {
-                    mostrar = coincideTipo;
-                }
-    
-                fila.style.display = mostrar ? "" : "none";
+                const mesISO = `${y}-${m.padStart(2, '0')}`;
+        
+                fechasSet.add(fechaISO);
+                mesesSet.add(mesISO);
             });
-        }
-    
-        if (fechasOrdenadas.length > 0) {
-            const fechaMasReciente = fechasOrdenadas[0];
-            filtroFecha.value = fechaMasReciente;
-            aplicarFiltros(fechaMasReciente);
-        }
-    
-        filtroTipo.addEventListener("change", () => aplicarFiltros());
-    
-        filtroMes.addEventListener("change", () => {
-            filtroFecha.value = "";
-            aplicarFiltros();
-        });
-    
-        filtroFecha.addEventListener("change", () => {
-            filtroMes.value = "";
-            aplicarFiltros();
-        });
-});
+        
+            const fechasOrdenadas = Array.from(fechasSet).sort().reverse();
+            const mesesOrdenados = Array.from(mesesSet).sort().reverse();
+        
+            fechasOrdenadas.forEach(fecha => {
+                const option = document.createElement("option");
+                option.value = fecha;
+        
+                const [anio, mes, dia] = fecha.split('-');
+                const nombreMes = new Date(anio, parseInt(mes) - 1).toLocaleString("es-CO", { month: "long" });
+                const fechaFormateada = `${dia} de ${nombreMes} de ${anio}`;
+        
+                option.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+                filtroFecha.appendChild(option);
+            });
+        
+            mesesOrdenados.forEach(mes => {
+                const option = document.createElement("option");
+                option.value = mes;
+                const [año, mesNum] = mes.split("-");
+                const nombreMes = new Date(año, mesNum - 1).toLocaleString("es-CO", {
+                    month: "long",
+                    year: "numeric"
+                });
+                option.textContent = nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1);
+                filtroMes.appendChild(option);
+            });
+        
+            function aplicarFiltros(fechaInicial = null) {
+                const tipoSeleccionado = filtroTipo.value.toLowerCase();
+                const mesSeleccionado = filtroMes.value;
+                const fechaSeleccionada = fechaInicial || filtroFecha.value;
+        
+                filas.forEach(fila => {
+                    const tipo = fila.children[3].textContent.trim().toLowerCase();
+                    const fechaTexto = fila.children[1].textContent.trim(); 
+                    const [d, m, y] = fechaTexto.split('/');
+                    const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        
+                    const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
+                    const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
+                    const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
+        
+                    let mostrar = false;
+        
+                    if (fechaSeleccionada) {
+                        mostrar = coincideTipo && coincideFecha;
+                    } else if (mesSeleccionado) {
+                        mostrar = coincideTipo && coincideMes;
+                    } else {
+                        mostrar = coincideTipo;
+                    }
+        
+                    fila.style.display = mostrar ? "" : "none";
+                });
+            }
+        
+            if (fechasOrdenadas.length > 0) {
+                const fechaMasReciente = fechasOrdenadas[0];
+                filtroFecha.value = fechaMasReciente;
+                aplicarFiltros(fechaMasReciente);
+            }
+        
+            filtroTipo.addEventListener("change", () => aplicarFiltros());
+        
+            filtroMes.addEventListener("change", () => {
+                filtroFecha.value = "";
+                aplicarFiltros();
+            });
+        
+            filtroFecha.addEventListener("change", () => {
+                filtroMes.value = "";
+                aplicarFiltros();
+            });
+
+            const inputsNumericos = document.querySelectorAll("input[name='peso']");
+
+            inputsNumericos.forEach(input => {
+                const valor = input.value.trim();
+
+                if (!isNaN(valor) && valor !== "") {
+                    const numero = parseFloat(valor);
+
+                    const formateado = numero
+                        .toFixed(2)               
+                        .replace('.', ',');      
+
+                    input.value = formateado;
+                }
+            });
+
+            const residuosPorTipo = {
+                "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - KG", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
+                "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
+                "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
+                "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+            };
+            
+            // Inicializar selects de cada fila
+            document.querySelectorAll("tr.fila-registro").forEach(fila => {
+                const tipoSelect = fila.querySelector("select[name='tipo_residuo']");
+                const residuoSelect = fila.querySelector("select[name='residuo']");
+                const residuoActual = "{{ registro.residuo|escapejs }}"; // Django no puede interpolar por cada fila, lo haremos más abajo
+            
+                // Función para cargar residuos por tipo
+                const cargarResiduos = (tipo, residuoSeleccionado = null) => {
+                    const lista = residuosPorTipo[tipo] || [];
+            
+                    lista.forEach(residuo => {
+                        const option = document.createElement("option");
+                        option.value = residuo;
+                        option.textContent = residuo;
+                        if (residuo === residuoSeleccionado) {
+                            option.selected = true;
+                        }
+                        residuoSelect.appendChild(option);
+                    });
+                };
+            
+                // Cargar residuos según el tipo actual
+                const tipoActual = tipoSelect.value;
+                const residuoOriginal = fila.querySelector("input[name='residuo_original']")?.value;
+                cargarResiduos(tipoActual, residuoOriginal);
+            
+                // Al cambiar el tipo
+                tipoSelect.addEventListener("change", () => {
+                    cargarResiduos(tipoSelect.value);
+                });
+            });
+
+
+
+         });
 </script>
 
 {% endblock %}

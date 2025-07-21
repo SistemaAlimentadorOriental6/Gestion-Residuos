@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Formulario Actualizar Registro Vigilante{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="container mt-5">
+
+        
+
+
+        <div class="row justify-content-center">
+
+            <span class="navbar-text text-center">
+                <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
+            </span>
+
+            <div class="form-container">
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <h5 class="text-center mt-3 mb-2"></h5>
+                    <input type="hidden" name="grupo_codigo" value="{{ grupo_codigo }}">
+
+                    <div id="mensaje-cedula"></div>
+
+                    {% if messages %}
+                        <div class="d-flex justify-content-center mt-3">
+                            <div style="width: 100%; max-width: 600px;">
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+
+                        <div class="col-sm-12 col-md-12 col-lg-6">
+                            <label for="fecha" class="form-label">Fecha</label>
+                            <input type="date" id="fecha" name="fecha" class="form-control borde-input" value="{{ registro.fecha }}" readonly>
+                        </div>
+
+                        <div class="col-sm-12 col-md-12 col-lg-6">
+                            <label for="hora" class="form-label">Horaaaa</label>
+                            <input type="time" id="hora" name="hora" class="form-control borde-input" value="{{ registro.hora }}" readonly>
+                        </div>
+
+                        <div class="col-sm-12 col-md-6 col-lg-12">
+                            <label for="tipo" class="form-label">Tipo de Residuo</label>
+                            <select id="tipo" name="tipo" class="form-select borde-input" required>
+                                <option value="">Seleccione</option>
+                                <option value="Aprovechable" {% if residuo.tipo_residuo == "Aprovechable" %}selected{% endif %}>Aprovechable</option>
+                                <option value="Especial" {% if residuo.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
+                                <option value="Respel" {% if residuo.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
+                                <option value="Respel Aprovechable" {% if residuo.tipo_residuo == "Respel Aprovechable" %}selected{% endif %}>Respel Aprovechable</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-12 col-md-6 col-lg-12">
+                            <label for="residuo" class="form-label">Residuo</label>
+                            <select id="residuo" name="residuo" class="form-select borde-input" required >
+                                
+                    
+                            </select>
+                        </div>
+
+
+
+                        <div id="campo-peso" class="col-sm-12 col-md-12 col-lg-12">
+                            <label for="peso" class="form-label">Peso</label>
+                            <input type="number" id="peso" step="0.01" id="peso" name="peso" class="form-control borde-input" value="{{ registro.peso }}">
+                            <div id="error-peso" class="text-danger mt-1 small"></div>
+                        </div>
+
+
+                        <div id="campo-cantidad" class="col-sm-12 col-md-12 col-lg-12" style="display: none;">
+                            <label for="cantidad" class="form-label">Cantidad</label>
+                            <input type="number" step="1" id="cantidad" name="cantidad" class="form-control borde-input" placeholder="Ingrese la cantidad" value="{{ registro.cantidad }}">
+                            <div id="error-cantidad" class="text-danger mt-1 small"></div>
+                        </div>
+
+                
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-light mt-4" id="boton-enviar">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tipoSelect = document.getElementById("tipo");
+        const residuoSelect = document.getElementById("residuo");
+
+        residuoSelect.value = registro.residuo;
+    
+        const residuosPorTipo = {
+            "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - KG", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
+            "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - M3"],
+            "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
+            "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+        };
+    
+        const residuosPorCantidad = [
+            "Batería 4 DLT 4D",
+            "Batería Ácido Plomo 25R",
+            "Batería Ácido Plomo 31-30H",
+            "Batería Ácido Plomo 65-G4-27",
+            "Batería UPS"
+        ];
+    
+        tipoSelect.addEventListener("change", function () {
+            const tipoSeleccionado = tipoSelect.value;
+            const residuos = residuosPorTipo[tipoSeleccionado] || [];
+    
+            // Limpiar opciones
+            residuoSelect.innerHTML = '<option value="">Seleccione</option>';
+    
+            // Cargar nuevas
+            residuos.forEach(function (residuo) {
+                const option = document.createElement("option");
+                option.value = residuo;
+                option.textContent = residuo;
+                residuoSelect.appendChild(option);
+            });
+        });
+    
+        residuoSelect.addEventListener("change", function () {
+            const residuoSeleccionado = residuoSelect.value;
+            console.log("Residuo seleccionado:", residuoSeleccionado);
+            console.log("Precios disponibles:", preciosResiduos);
+        
+            const labelPeso = document.querySelector('label[for="peso"]');
+            const inputPeso = document.getElementById("peso");
+            const campoPeso = document.getElementById("campo-peso"); // Asegúrate de que exista un contenedor con este ID
+            const campoCantidad = document.getElementById("campo-cantidad");
+        
+            if (residuoSeleccionado.toLowerCase().includes("batería") || residuoSeleccionado.toUpperCase().includes("UND")) {
+                campoCantidad.style.display = "block";
+                campoPeso.style.display = "none";
+            } else {
+                campoCantidad.style.display = "none";
+                campoPeso.style.display = "block";
+            }
+        
+            // Cambiar el label del campo peso si está en la lista de residuos que se miden por cantidad
+            if (residuosPorCantidad.includes(residuoSeleccionado)) {
+                labelPeso.textContent = "Cantidad";
+                inputPeso.placeholder = "Ingrese la cantidad...";
+                inputPeso.step = "1";
+            } else {
+                labelPeso.textContent = "Peso";
+                inputPeso.placeholder = "Ingrese el peso...";
+                inputPeso.step = "0.01";
+            }
+        
+            // Lógica de carga automática del costo unitario
+            const precio = preciosResiduos[residuoSeleccionado];
+            const mensajeDiv = document.querySelector("#costo_unitario ~ .mensaje");
+        
+            if (precio !== undefined && costoUnitario) {
+                costoUnitario.value = formatearMiles(precio);
+                calcularCostoTotal();
+                mensajeDiv.innerText = "";
+            } else {
+                costoUnitario.value = "";
+                costoTotal.value = "";
+                mensajeDiv.innerText = "No se encontró el precio en la BD para el residuo seleccionado.";
+                mensajeDiv.style.color = "red";
+            }
+        });
+    });
+
+
+</script>
+
+
+
+{% endblock %}

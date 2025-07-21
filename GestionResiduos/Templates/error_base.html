@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Error{% endblock %}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-color: white;
+            color: #00A000;
+            text-align: center;
+            padding: 40px;
+        }
+
+    
+        .box {
+            border: 2px solid #00A000;
+            padding: 30px;
+            display: inline-block;
+            border-radius: 12px;
+            background-color: #f0fff0;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        a {
+            color: #fff;
+            background-color: #00A000;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        a:hover {
+            background-color: #007f00;
+        }
+        
+      
+
+    </style>
+</head>
+<body>
+    
+    <div class="content">
+        <div class="box">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+</body>
+</html>

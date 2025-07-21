@@ -33,7 +33,7 @@ def formularioResiduos(request):
     es_sergio = request.user.username == '1036619811'
 
     TOLERANCIA_PESO = Decimal('10.0')
-    TOLERANCIA_CANTIDAD = 5
+    TOLERANCIA_CANTIDAD = Decimal('5.0')
 
     grupo = None
 
@@ -41,11 +41,19 @@ def formularioResiduos(request):
         tipo_residuo = request.POST.get('tipo')
         residuo = request.POST.get('residuo')
 
-        peso_raw = request.POST.get('peso')
-        cantidad_raw = request.POST.get('cantidad')
+        # Sanitizar peso y cantidad desde el formulario
+        peso_raw = request.POST.get('peso', '0').replace(',', '.')
+        cantidad_raw = request.POST.get('cantidad', '0')
 
-        peso = Decimal(peso_raw.replace(',', '.')) if peso_raw else Decimal('0')
-        cantidad = int(cantidad_raw) if cantidad_raw else 0
+        try:
+            peso = Decimal(peso_raw)
+        except:
+            peso = Decimal('0.0')
+
+        try:
+            cantidad = Decimal(cantidad_raw)
+        except:
+            cantidad = Decimal('0.0')
 
         # Buscar grupo compatible
         posibles_grupos = GrupoResiduo.objects.filter(completado=False)
@@ -60,9 +68,14 @@ def formularioResiduos(request):
                     tipo_residuo=tipo_residuo,
                     residuo=residuo
                 ).first()
-                if perfil2 and abs(perfil2.peso - peso) <= TOLERANCIA_PESO and abs(perfil2.cantidad - cantidad) <= TOLERANCIA_CANTIDAD:
-                    grupo = posible
-                    break
+
+                if perfil2:
+                    if (
+                        abs(Decimal(perfil2.peso) - peso) <= TOLERANCIA_PESO and
+                        abs(Decimal(perfil2.cantidad) - cantidad) <= TOLERANCIA_CANTIDAD
+                    ):
+                        grupo = posible
+                        break
 
             elif not es_sergio and not existe_2:
                 perfil1 = FormularioPerfil1.objects.filter(
@@ -70,9 +83,14 @@ def formularioResiduos(request):
                     tipo_residuo=tipo_residuo,
                     residuo=residuo
                 ).first()
-                if perfil1 and abs(perfil1.peso - peso) <= TOLERANCIA_PESO and abs(perfil1.cantidad - cantidad) <= TOLERANCIA_CANTIDAD:
-                    grupo = posible
-                    break
+
+                if perfil1:
+                    if (
+                        abs(Decimal(perfil1.peso) - peso) <= TOLERANCIA_PESO and
+                        abs(Decimal(perfil1.cantidad) - cantidad) <= TOLERANCIA_CANTIDAD
+                    ):
+                        grupo = posible
+                        break
 
         # Si no se encontró grupo compatible
         if not grupo:
@@ -89,14 +107,18 @@ def formularioResiduos(request):
 
         # Guardar formulario
         if es_sergio:
-            costo_unitario = int(request.POST.get('costo_unitario', '0').replace('.', '').replace(',', ''))
-            costo_total = int(request.POST.get('costo_total', '0').replace('.', '').replace(',', ''))
+            # Limpiar campos monetarios
+            costo_unitario_raw = request.POST.get('costo_unitario', '0').replace('.', '').replace(',', '')
+            costo_total_raw = request.POST.get('costo_total', '0').replace('.', '').replace(',', '')
+
+            costo_unitario = int(costo_unitario_raw or '0')
+            costo_total = int(costo_total_raw or '0')
 
             FormularioPerfil1.objects.create(
                 tipo_residuo=tipo_residuo,
                 residuo=residuo,
                 peso=peso,
-                cantidad=cantidad,
+                cantidad=int(cantidad),
                 costo_unitario=costo_unitario,
                 costo_total=costo_total,
                 grupo_codigo=grupo,
@@ -114,7 +136,7 @@ def formularioResiduos(request):
                 tipo_residuo=tipo_residuo,
                 residuo=residuo,
                 peso=peso,
-                cantidad=cantidad,
+                cantidad=int(cantidad),
                 grupo_codigo=grupo,
                 usuario=request.user
             )
@@ -130,37 +152,35 @@ def formularioResiduos(request):
         messages.success(request, "Residuo guardado exitosamente.")
         return redirect('formularioResiduos')
 
-    
-    else:
-        # GET: preparación de datos
-        residuos_precios = ResiduoPrecio.objects.all()
-        precios_dict = {r.residuo: r.costo_unitario for r in residuos_precios}
-        precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
+    # --- GET ---
+    residuos_precios = ResiduoPrecio.objects.all()
+    precios_dict = {r.residuo: r.costo_unitario for r in residuos_precios}
+    precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
 
-        grupos_pendientes = []
-        if es_sergio:
-            grupos_incompletos = GrupoResiduo.objects.filter(
-                completado=False,
-                formularioperfil1__isnull=True,
-                formularioperfil2__isnull=False
-            ).distinct()
+    grupos_pendientes = []
+    if es_sergio:
+        grupos_incompletos = GrupoResiduo.objects.filter(
+            completado=False,
+            formularioperfil1__isnull=True,
+            formularioperfil2__isnull=False
+        ).distinct()
 
-            for grupo in grupos_incompletos:
-                registro_vigilancia = FormularioPerfil2.objects.filter(grupo_codigo=grupo).first()
-                if registro_vigilancia:
-                    grupos_pendientes.append({
-                        'codigo': grupo.codigo,
-                        'fecha': registro_vigilancia.fecha,
-                        'tipo': registro_vigilancia.tipo_residuo,
-                        'residuo': registro_vigilancia.residuo,
-                    })
+        for grupo in grupos_incompletos:
+            registro_vigilancia = FormularioPerfil2.objects.filter(grupo_codigo=grupo).first()
+            if registro_vigilancia:
+                grupos_pendientes.append({
+                    'codigo': grupo.codigo,
+                    'fecha': registro_vigilancia.fecha,
+                    'tipo': registro_vigilancia.tipo_residuo,
+                    'residuo': registro_vigilancia.residuo,
+                })
 
-        return render(request, 'Residuos/formulario.html', {
-            'es_sergio': es_sergio,
-            'grupo_codigo': "",
-            'precios_residuos_json': precios_json,
-            'grupos_pendientes': grupos_pendientes
-        })
+    return render(request, 'Residuos/formulario.html', {
+        'es_sergio': es_sergio,
+        'grupo_codigo': "",
+        'precios_residuos_json': precios_json,
+        'grupos_pendientes': grupos_pendientes
+    })
 
 
 
@@ -194,7 +214,7 @@ def listadoAutorizaciones(request):
             residuos_data[key]['perfil2'] += valor_p2
             residuos_data[key]['modo'] = modo
 
-        diferencias = []
+        diferencias = []    
         for residuo, datos in residuos_data.items():
             v1, v2 = datos['perfil1'], datos['perfil2']
             modo = datos['modo']
@@ -208,18 +228,17 @@ def listadoAutorizaciones(request):
                         'valor_p2': v2,
                         'mensaje': v1 - v2
                     })
-            else:  
-                if v1 or v2:
-                    referencia = v1 if v1 else 1  # Usa perfil1 como base
+            else:  # modo == peso
+                if v1 or v2:  # Si hay algún valor
+                    referencia = v1 if v1 else 1  # Evitar división por cero
                     dif_pct = abs(v1 - v2) / referencia * 100
-                    if dif_pct > 5:
-                        diferencias.append({
-                            'residuo': residuo,
-                            'modo': 'Peso',
-                            'valor_p1': v1,
-                            'valor_p2': v2,
-                            'diferencia_pct': round(dif_pct, 2)
-                        })
+                    diferencias.append({
+                        'residuo': residuo,
+                        'modo': 'Peso',
+                        'valor_p1': v1,
+                        'valor_p2': v2,
+                        'diferencia_pct': round(dif_pct, 2)
+                    })
 
         grupos_alerta.append({
             'grupo': grupo,
@@ -234,18 +253,9 @@ def listadoAutorizaciones(request):
         alerta_peso = request.POST.get('alerta_peso', '')
         print(f"Alerta peso recibida: {alerta_peso}")
         
-        diferencia = ""
-        if alerta_peso:
-            diferencia = alerta_peso
-            print(f"La novedad es por el peso: {diferencia}")
-            
-        else:
-            alerta_cant = request.POST.get('alerta_cant', '')
-            print(f"Alerta cantidad recibida: {alerta_cant}")
-            diferencia = alerta_cant
-            print(f"La novedad es por la cantidad: {diferencia}")
+        diferencia = alerta_peso or request.POST.get('alerta_cant', '')
+        print(f"La novedad es: {diferencia}")
 
-        
         grupo = get_object_or_404(GrupoResiduo, id=grupo_id)
 
         AutorizacionSalida.objects.create(
@@ -253,7 +263,7 @@ def listadoAutorizaciones(request):
             estado=estado,
             observacion=observacion or "Ninguna",
             autorizador=request.user,
-            diferencia=diferencia or "Ninguna",         
+            diferencia=diferencia or "Ninguna",
         )
 
         messages.success(request, f'Grupo {grupo.codigo} autorizado correctamente.')
@@ -275,7 +285,7 @@ def registrosVigilantes(request):
 
 
 @login_required
-def registrosSergio(request):
+def registrosSgi(request):
     registros = FormularioPerfil1.objects.filter(usuario=request.user).order_by('-fecha', '-hora')
     return render(request, 'Residuos/registrosSergio.html', {'registros': registros})
 
@@ -369,20 +379,17 @@ def actualizarCostoTotal(request, registro_id):
 
     if request.method == 'POST':
         try:
-            campo = request.POST.get('campo_modificado')
+            registro.tipo_residuo = request.POST.get('tipo_residuo', registro.tipo_residuo)
+            registro.residuo = request.POST.get('residuo', registro.residuo)
 
-            costo_raw = request.POST.get('costo_total', '').replace('.', '').replace(',', '.')
-            nuevo_costo = float(costo_raw) if costo_raw else 0
+            # Sanitizar numéricos
+            def limpiar_num(valor):
+                return float(valor.replace('.', '').replace(',', '.')) if valor else 0
 
-            peso_raw = request.POST.get('peso', '')
-            peso_val = float(peso_raw.replace('.', '').replace(',', '.')) if peso_raw else 0
-
-            if campo == 'peso':
-                registro.peso = peso_val
-                registro.costo_total = round(peso_val * registro.costo_unitario)
-
-            elif campo == 'costo_total':
-                registro.costo_total = round(nuevo_costo)
+            registro.costo_unitario = int(limpiar_num(request.POST.get('costo_unitario')))
+            registro.cantidad = int(request.POST.get('cantidad') or 0)
+            registro.peso = limpiar_num(request.POST.get('peso'))
+            registro.costo_total = int(limpiar_num(request.POST.get('costo_total')))
 
             registro.save()
             messages.success(request, "Registro actualizado correctamente.")
@@ -390,7 +397,50 @@ def actualizarCostoTotal(request, registro_id):
         except Exception as e:
             messages.error(request, f"Error al actualizar: {str(e)}")
 
-    return redirect('registrosSergio')
+    return redirect('registrosSgi')
+
+
+
+
+
+def actualizarRegistroVigilante(request, registro_id):
+    registro = get_object_or_404(FormularioPerfil2, id=registro_id)
+    
+    if request.method == "POST":
+        try:
+            registro.tipo_residuo = request.POST.get('tipo_residuo', registro.tipo_residuo)
+            registro.residuo = request.POST.get('residuo', registro.residuo)
+
+            def limpiar_num(valor):
+                return float(valor.replace('.', '').replace(',', '.')) if valor else 0
+
+            cantidad_raw = request.POST.get('cantidad', '0')
+            registro.cantidad = int(float(cantidad_raw.replace(',', '.')))  # <-- Aquí el fix
+
+            registro.peso = limpiar_num(request.POST.get('peso'))
+            
+            registro.save()
+            messages.success(request, "Registro actualizado correctamente.")
+            
+        except Exception as e:
+            messages.error(request, f"Error al actualizar: {str(e)}")
+            
+        return redirect('registrosVigilantes')
+
+
+    residuos_por_tipo = {
+    "Aprovechable": [...],
+    "Especial": [...],
+    "Respel": [...],
+    "Respel Aprovechable": [...]
+    }
+
+    
+    return render(request, 'Residuos/registrosVigilantes.html', {
+        "residuos_por_tipo": residuos_por_tipo
+    })
+
+
 
 
 

@@ -1,0 +1,56 @@
+.form-container{
+    width: 50%;
+    height: 100%;
+    border: 4px solid #6ba43a;
+    padding: 30px;
+    border-radius: 30px;
+    margin-top: 15px;
+    margin-bottom: 50px;
+    font-size: 18px;  
+}
+
+input{
+    margin-top: 5px;
+}
+
+label{
+    margin-top: 15px;
+}
+
+.borde-input{
+    border: 2px solid black;
+}
+
+.titulo{
+    padding: 20px;
+    text-align: center;
+}
+
+
+.link{
+    color: #6ba43a;
+    font-size: 20px;
+}
+
+#boton-enviar{
+    background-color: #6ba43a;
+    color: white;
+    border: 2px solid black;
+}
+
+
+.brand-header {
+    background-color: #6ba43a !important;
+    color: white;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+}
+
+
+
+@media (max-width: 600px) {
+    .form-container{
+        width: 100%;
+    }
+
+}

@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from GestionResiduos.views import formularioResiduos, login_view, logout_view, listadoAutorizaciones, registrosVigilantes, registrosSergio, agregarResiduoPrecio, listadoResiduosPrecios, actualizarResiduoPrecio, actualizarCostoTotal, generarExcel
+from GestionResiduos.views import formularioResiduos, login_view, logout_view, listadoAutorizaciones, registrosVigilantes, registrosSgi, agregarResiduoPrecio, listadoResiduosPrecios, actualizarResiduoPrecio, actualizarCostoTotal, actualizarRegistroVigilante, generarExcel
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,11 +24,12 @@ urlpatterns = [
     path('residuos/formularioResiduos', formularioResiduos, name='formularioResiduos'),
     path('residuos/listadoAutorizaciones', listadoAutorizaciones, name='listadoAutorizaciones'),
     path('residuos/registrosVigilantes', registrosVigilantes, name='registrosVigilantes'),
-    path('residuos/registrosSergio', registrosSergio, name='registrosSergio'),
+    path('residuos/registrosSgi', registrosSgi, name='registrosSgi'),
     path('logout/', logout_view, name='logout'),
     path('residuos/agregarResiduosPrecio', agregarResiduoPrecio, name='agregarResiduoPrecio'),
     path('residuos/listadoResiduosPrecio', listadoResiduosPrecios, name='listadoResiduosPrecio'),
     path('residuos/actualizarResiduo/<int:id>/', actualizarResiduoPrecio , name='actualizarResiduoPrecio'),
     path('residuos/actualizarCostoTotal/<int:registro_id>/', actualizarCostoTotal, name='actualizarCostoTotal'),
+    path('residuos/actualizarRegistroVigilante/<int:registro_id>/', actualizarRegistroVigilante, name='actualizarRegistroVigilante'),
     path('residuos/generarExcel/<int:registro_id>/', generarExcel, name='generarExcel'),
 ]
