@@ -48,6 +48,12 @@ label{
 
 
 
+.form-check-input:checked {
+    background-color: #6ba43a;
+    border-color: #6ba43a;
+}
+
+
 @media (max-width: 600px) {
     .form-container{
         width: 100%;

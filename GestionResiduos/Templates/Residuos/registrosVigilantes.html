@@ -73,10 +73,10 @@
                             <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
                                 <td><b>{{ forloop.counter }}</b></td>
                                 <td>{{ registro.fecha|date:"d/m/Y" }}</td>
-                                <td>{{ registro.hora }}</td>
+                                <td class="text-nowrap">{{ registro.hora }}</td>
                                 
                                 <td>
-                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark">
+                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark" style="width: auto;">
                                         <option {% if registro.tipo_residuo == "Aprovechable" %}selected{% endif %}>Aprovechable</option>
                                         <option {% if registro.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
                                         <option {% if registro.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
@@ -85,7 +85,7 @@
                                 </td>
                         
                                 <td>
-                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo">
+                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo" style="width: auto">
                                         <option value="{{ registro.residuo }}">{{ registro.residuo }}</option>
                                     </select>
                                 </td>

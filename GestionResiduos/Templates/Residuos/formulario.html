@@ -1,303 +1,189 @@
 {% extends "base.html" %}
 
+{% load filtros_residuo %}
+
 {% block title %}Formulario Residuos{% endblock %}
 
 {% block content %}
+<div class="container mt-5">
 
-<div class="container">
-
-    <div class="container mt-5">
-
-        
-
-
-        <div class="row justify-content-center">
-
-            {% if grupos_pendientes %}
-                
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
-                        <div>
-                            {% for g in grupos_pendientes %}
-
-                            <strong>Grupo pendiente:</strong> {{ g.codigo }}<br>
-                            <strong>Fecha:</strong> {{ g.fecha|date:"d/m/Y" }}<br>
-                            <strong>Tipo:</strong> {{ g.tipo }}<br>
-                            <strong>Residuo:</strong> {{ g.residuo }}<br><br>
-                            {% endfor %}
-
-                        </div>
-                    </div>
-                
-            {% endif %}
-
-
-            <span class="navbar-text text-center">
-                <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
-            </span>
-
-
-
-            <div class="form-container">
-                
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <h5 class="text-center mt-3 mb-2">Registrar Residuo <br><br> {{ grupo_codigo }}</h5>
-                    <input type="hidden" name="grupo_codigo" value="{{ grupo_codigo }}">
-
-                    <div id="mensaje-cedula"></div>
-
-                    {% if messages %}
-                        <div class="d-flex justify-content-center mt-3">
-                            <div style="width: 100%; max-width: 600px;">
-                                {% for message in messages %}
-                                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
-                                        {{ message }}
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    {% endif %}
-
-                    <div class="row">
-
-                        <div class="col-sm-12 col-md-12 col-lg-6">
-                            <label for="fecha" class="form-label">Fecha</label>
-                            <input type="date" id="fecha" name="fecha" class="form-control borde-input" readonly>
-                        </div>
-
-                        <div class="col-sm-12 col-md-12 col-lg-6">
-                            <label for="hora" class="form-label">Hora</label>
-                            <input type="time" id="hora" name="hora" class="form-control borde-input" readonly>
-                        </div>
-
-                        <div class="col-sm-12 col-md-6 col-lg-12">
-                            <label for="tipo" class="form-label">Tipo de Residuo</label>
-                            <select id="tipo" name="tipo" class="form-select borde-input" required>
-                                <option value="">Seleccione</option>
-                                <option value="Aprovechable">Aprovechable</option>
-                                <option value="Especial">Especial</option>
-                                <option value="Respel">Respel</option>
-                                <option value="Respel Aprovechable">Respel Aprovechable</option>
-                            </select>
-                        </div>
-
-                        <div class="col-sm-12 col-md-6 col-lg-12">
-                            <label for="residuo" class="form-label">Residuo</label>
-                            <select id="residuo" name="residuo" class="form-select borde-input" required>
-                                
-                    
-                            </select>
-                        </div>
-
-
-
-                        <div id="campo-peso" class="col-sm-12 col-md-12 col-lg-12">
-                            <label for="peso" class="form-label">Peso</label>
-                            <input type="number" id="peso" step="0.01" id="peso" name="peso" class="form-control borde-input">
-                            <div id="error-peso" class="text-danger mt-1 small"></div>
-                        </div>
-
-
-                        <div id="campo-cantidad" class="col-sm-12 col-md-12 col-lg-12" style="display: none;">
-                            <label for="cantidad" class="form-label">Cantidad</label>
-                            <input type="number" step="1" id="cantidad" name="cantidad" class="form-control borde-input" placeholder="Ingrese la cantidad">
-                            <div id="error-cantidad" class="text-danger mt-1 small"></div>
-                        </div>
-
-                
-                        
-                        {% if es_sergio %}
-                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                <label for="costo_unitario" class="form-label">Costo Unitario</label>
-                                <input type="text" step="0.01" id="costo_unitario" name="costo_unitario" class="form-control borde-input" required>
-                                <div class="mensaje"></div>
-                            </div>
-
-                            <div class="col-sm-12 col-md-12 col-lg-12">
-                                <label for="costo_total" class="form-label">Costo Total</label>
-                                <input type="text" step="0.01" id="costo_total" name="costo_total" class="form-control borde-input" readonly>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="d-flex justify-content-center">
-                        <button type="submit" class="btn btn-light mt-4" id="boton-enviar">Guardar</button>
-                    </div>
-                </form>
+    {% if grupos_pendientes %}
+        <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+            <div>
+                {% for g in grupos_pendientes %}
+                    <strong>Grupo pendiente:</strong> {{ g.codigo }}
+                    <strong>Fecha:</strong> {{ g.fecha|date:"d/m/Y" }}
+                    <strong>Tipo:</strong> {{ g.tipo }}
+                    <strong>Residuo:</strong> {{ g.residuo }} <br><br>
+                {% endfor %}
             </div>
         </div>
+    {% endif %}
+
+    <div class="text-center mb-3">
+        <b>Bienvenido al Sistema de Gestión de Residuos:</b> {{ user.first_name }}
     </div>
 
+    <form method="POST">
+        {% csrf_token %}
+        <h5 class="text-center mt-3 mb-2">Registrar Residuos<br><br>{{ grupo_codigo }}</h5>
+        <input type="hidden" name="grupo_codigo" value="{{ grupo_codigo }}">
+
+        {% if messages %}
+            <div class="d-flex justify-content-center mt-3">
+                <div style="width: 100%; max-width: 600px;">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4 mb-3">
+            <div class="w-100" style="max-width: 300px;">
+                <label for="fecha" class="form-label fw-bold">Fecha</label>
+                <input type="date" id="fecha" name="fecha" class="form-control border-black" readonly>
+            </div>
+            <div class="w-100" style="max-width: 300px;">
+                <label for="hora" class="form-label fw-bold">Hora</label>
+                <input type="time" id="hora" name="hora" class="form-control border-black" readonly>
+            </div>
+        </div>
+
+
+        
+        <div class="card rounded-card">
+            <div class="card-header brand-header">
+                <h5 class="mb-0 text-center">Tabla Residuos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Seleccionar</th>
+                                <th>Tipo</th>
+                                <th>Residuo</th>
+                                <th>Cantidad</th>
+                                <th>Peso</th>
+                                {% if es_sergio %}
+                                    <th>Costo Unitario</th>
+                                    <th>Costo Total</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tipo, residuos in residuos_por_tipo.items %}
+                                <tr class="table-secondary">
+                                    <td colspan="7"><strong>{{ tipo }}</strong></td>
+                                </tr>
+                                {% for residuo in residuos %}
+                                    {% with clave=tipo|add:" - "|add:residuo %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input" type="checkbox" name="seleccionados" value="{{ tipo }} - {{ residuo }}" style="transform: scale(1.3); cursor: pointer;">
+                                            </div>
+                                        </td>
+                                        <td>{{ tipo }}</td>
+                                        <td>{{ residuo }}</td>
+                                        <td>
+                                            {% if "UND" in residuo or "Batería" in residuo %}
+                                                <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" style="width: 130px;">
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if "UND" not in residuo and "Batería" not in residuo %}
+                                                <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black" style="width: 130px;">
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        {% if es_sergio %}
+                                            <td>
+                                                <input type="text" name="costo_unitario_{{ clave }}" class="form-control border-black" value="{{ precios_residuos|precio_residuo:residuo|default:'0' }}" style="width: 130px;">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="costo_total_{{ clave }}" class="form-control border-black" style="width: 130px;">
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endwith %}
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-success mt-5" id="boton-enviar">Guardar Seleccionados</button>
+        </div>
+    </form>
 </div>
-
-
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
-        const preciosResiduos = JSON.parse('{{ precios_residuos_json|escapejs }}');
-
-        // Fecha y hora actual
-        const fechaInput = document.getElementById("fecha");
         const hoy = new Date();
         const yyyy = hoy.getFullYear();
         const mm = String(hoy.getMonth() + 1).padStart(2, '0');
         const dd = String(hoy.getDate()).padStart(2, '0');
-        fechaInput.value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById("fecha").value = `${yyyy}-${mm}-${dd}`;
     
-        const campoHora = document.getElementById('hora');
-        if (campoHora) {
-            const hh = String(hoy.getHours()).padStart(2, '0');
-            const min = String(hoy.getMinutes()).padStart(2, '0');
-            campoHora.value = `${hh}:${min}`;
+        const hh = String(hoy.getHours()).padStart(2, '0');
+        const min = String(hoy.getMinutes()).padStart(2, '0');
+        document.getElementById("hora").value = `${hh}:${min}`;
+    
+        // Función para formatear valores a pesos colombianos
+        function formatearPesosColombianos(valor) {
+            valor = valor.replace(/\D/g, ""); // quitar todo excepto dígitos
+            if (!valor) return "";
+            return parseInt(valor).toLocaleString("es-CO");
         }
     
-        // Costo total dinámico
-        const peso = document.getElementById('peso');
-        const costoUnitario = document.getElementById('costo_unitario');
-        const costoTotal = document.getElementById('costo_total');
+        // Al cargar la página, formatea todos los campos de costo_unitario
+        document.querySelectorAll("input[name^='costo_unitario_']").forEach(input => {
+            let valor = parseFloat(input.value.replace(/\./g, '').replace(',', '.')) || 0;
+            input.value = valor ? Math.round(valor).toLocaleString('es-CO') : '0';
+        });
     
-        function parseValor(valor) {
-            return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
-        }
+        // Escucha cambios en peso/cantidad o costo unitario
+        document.querySelectorAll("input[name^='peso_'], input[name^='cantidad_'], input[name^='costo_unitario_']").forEach(input => {
+            input.addEventListener("input", () => {
+                const row = input.closest("tr");
+                const pesoInput = row.querySelector("input[name^='peso_']");
+                const cantidadInput = row.querySelector("input[name^='cantidad_']");
+                const costoInput = row.querySelector("input[name^='costo_unitario_']");
+                const totalInput = row.querySelector("input[name^='costo_total_']");
     
-        function formatearMiles(valor) {
-            return valor.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
+                if (!costoInput || !totalInput) return;
     
-        function calcularCostoTotal() {
-            const pesoVal = parseFloat(peso.value) || 0;
-            const costoVal = parseValor(costoUnitario.value);
-            const total = pesoVal * costoVal;
-            costoTotal.value = formatearMiles(Math.round(total));
-        }
+                // Extraer valores numéricos
+                const cantidad = pesoInput ? parseFloat(pesoInput.value) || 0 : parseFloat(cantidadInput?.value) || 0;
+                const costo = parseFloat(costoInput.value.replace(/\./g, '').replace(',', '.')) || 0;
+                const total = cantidad * costo;
     
-        if (costoUnitario) {
-            costoUnitario.addEventListener('input', function () {
-                let valor = costoUnitario.value.replace(/\D/g, '');
-                if (valor !== "") {
-                    costoUnitario.value = formatearMiles(valor);
-                }
-                calcularCostoTotal();
-            });
-        }
-    
-        if (peso) {
-            peso.addEventListener('input', calcularCostoTotal);
-        }
-    
-        // Selección de tipo y residuo
-        const tipoSelect = document.getElementById("tipo");
-        const residuoSelect = document.getElementById("residuo");
-    
-        const residuosPorTipo = {
-            "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - KG", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],
-            "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - MT3"],
-            "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
-            "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
-        };
-    
-        const residuosPorCantidad = [
-            "Batería 4 DLT 4D",
-            "Batería Ácido Plomo 25R",
-            "Batería Ácido Plomo 31-30H",
-            "Batería Ácido Plomo 65-G4-27",
-            "Batería UPS"
-        ];
-    
-        tipoSelect.addEventListener("change", function () {
-            const tipoSeleccionado = tipoSelect.value;
-            const residuos = residuosPorTipo[tipoSeleccionado] || [];
-    
-            // Limpiar opciones
-            residuoSelect.innerHTML = '<option value="">Seleccione</option>';
-    
-            // Cargar nuevas
-            residuos.forEach(function (residuo) {
-                const option = document.createElement("option");
-                option.value = residuo;
-                option.textContent = residuo;
-                residuoSelect.appendChild(option);
+                // Formatear y asignar los valores
+                totalInput.value = total ? `$${Math.round(total).toLocaleString('es-CO')}` : '';
+                costoInput.value = Math.round(costo).toLocaleString('es-CO');
             });
         });
     
-        residuoSelect.addEventListener("change", function () {
-            const residuoSeleccionado = residuoSelect.value;
-            console.log("Residuo seleccionado:", residuoSeleccionado);
-            console.log("Precios disponibles:", preciosResiduos);
-        
-            const labelPeso = document.querySelector('label[for="peso"]');
-            const inputPeso = document.getElementById("peso");
-            const campoPeso = document.getElementById("campo-peso"); // Asegúrate de que exista un contenedor con este ID
-            const campoCantidad = document.getElementById("campo-cantidad");
-        
-            if (residuoSeleccionado.toLowerCase().includes("batería") || residuoSeleccionado.toUpperCase().includes("UND")) {
-                campoCantidad.style.display = "block";
-                campoPeso.style.display = "none";
-            } else {
-                campoCantidad.style.display = "none";
-                campoPeso.style.display = "block";
-            }
-        
-            // Cambiar el label del campo peso si está en la lista de residuos que se miden por cantidad
-            if (residuosPorCantidad.includes(residuoSeleccionado)) {
-                labelPeso.textContent = "Cantidad";
-                inputPeso.placeholder = "Ingrese la cantidad...";
-                inputPeso.step = "1";
-            } else {
-                labelPeso.textContent = "Peso";
-                inputPeso.placeholder = "Ingrese el peso...";
-                inputPeso.step = "0.01";
-            }
-        
-            // Lógica de carga automática del costo unitario
-            const precio = preciosResiduos[residuoSeleccionado];
-            const mensajeDiv = document.querySelector("#costo_unitario ~ .mensaje");
-        
-            if (precio !== undefined && costoUnitario) {
-                costoUnitario.value = formatearMiles(precio);
-                calcularCostoTotal();
-                mensajeDiv.innerText = "";
-            } else {
-                costoUnitario.value = "";
-                costoTotal.value = "";
-                mensajeDiv.innerText = "No se encontró el precio en la BD para el residuo seleccionado.";
-                mensajeDiv.style.color = "red";
-            }
+        // Aplicar formato dinámico mientras se escribe en costo_unitario y costo_total
+        document.querySelectorAll("input[name^='costo_unitario_'], input[name^='costo_total_']").forEach(input => {
+            input.addEventListener("input", (e) => {
+                const cursorPos = input.selectionStart;
+                const originalLength = input.value.length;
+                input.value = formatearPesosColombianos(input.value);
+                const newLength = input.value.length;
+                input.setSelectionRange(cursorPos + (newLength - originalLength), cursorPos + (newLength - originalLength));
+            });
         });
-
-        const form = document.querySelector("form");
-
-        form.addEventListener("submit", function (event) {
-            const residuoSeleccionado = residuoSelect.value.toLowerCase();
-            const esPorCantidad = residuoSeleccionado.includes("batería") || residuoSeleccionado.toUpperCase().includes("UND");
-    
-            const pesoVal = parseFloat(peso.value);
-            const cantidadVal = parseInt(document.getElementById("cantidad").value);
-    
-            // Limpiar mensajes anteriores
-            document.getElementById("error-peso").innerText = "";
-            document.getElementById("error-cantidad").innerText = "";
-    
-            let hayError = false;
-    
-            if (esPorCantidad && (!cantidadVal || cantidadVal <= 0)) {
-                document.getElementById("error-cantidad").innerText = "Debe ingresar una cantidad válida.";
-                hayError = true;
-            }
-            
-            if (!esPorCantidad && (!pesoVal || pesoVal <= 0)) {
-                document.getElementById("error-peso").innerText = "Debe ingresar un peso válido.";
-                hayError = true;
-            }
-    
-            if (hayError) {
-                event.preventDefault();
-            }
-        });
-
-        
     });
-
-    
 </script>
 {% endblock %}
