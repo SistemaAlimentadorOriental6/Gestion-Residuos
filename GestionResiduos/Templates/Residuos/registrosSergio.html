@@ -73,7 +73,7 @@
                         <form method="POST" action="{% url 'actualizarCostoTotal' registro.id %}" class="d-flex align-items-center gap-2">
                             {% csrf_token %}
                             <tr class="fila-registro" data-tipo="{{ registro.tipo_residuo }}" data-fecha="{{ registro.fecha|date:'Y-m-d' }}">
-                                <td><b>{{ forloop.counter }}</b></td>
+                                <td class="columna-numero"><b></b></td>
                                 <td>{{ registro.fecha|date:"d/m/Y" }}</td>
                                 <td>{{ registro.hora }}</td>
                                 
@@ -209,19 +209,21 @@
                 const tipoSeleccionado = filtroTipo.value.toLowerCase();
                 const mesSeleccionado = filtroMes.value;
                 const fechaSeleccionada = fechaInicial || filtroFecha.value;
-        
+            
+                let contador = 1;
+            
                 filas.forEach(fila => {
-                    const tipo = fila.children[3].textContent.trim().toLowerCase();
+                    const tipo = fila.querySelector('select[name="tipo_residuo"]').value.trim().toLowerCase();
                     const fechaTexto = fila.children[1].textContent.trim(); 
                     const [d, m, y] = fechaTexto.split('/');
                     const fechaISO = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-        
+            
                     const coincideTipo = !tipoSeleccionado || tipo === tipoSeleccionado;
                     const coincideFecha = fechaSeleccionada && fechaISO === fechaSeleccionada;
                     const coincideMes = mesSeleccionado && fechaISO.startsWith(mesSeleccionado);
-        
+            
                     let mostrar = false;
-        
+            
                     if (fechaSeleccionada) {
                         mostrar = coincideTipo && coincideFecha;
                     } else if (mesSeleccionado) {
@@ -229,8 +231,14 @@
                     } else {
                         mostrar = coincideTipo;
                     }
-        
+            
                     fila.style.display = mostrar ? "" : "none";
+            
+                    // ✅ Enumerar solo filas visibles
+                    const celdaNumero = fila.querySelector(".columna-numero b");
+                    if (mostrar && celdaNumero) {
+                        celdaNumero.textContent = contador++;
+                    }
                 });
             }
         
