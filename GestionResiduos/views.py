@@ -152,6 +152,10 @@ def formularioResiduos(request):
 
         if registro_exitoso:
             messages.success(request, "Residuos registrados correctamente.")
+            if es_sergio:
+                return redirect('registrosSgi')
+            else:
+                return redirect('registrosVigilantes')
 
         return redirect('formularioResiduos')
 

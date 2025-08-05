@@ -64,6 +64,12 @@
                     <option value="Respel Aprovechable">Respel Aprovechable</option>
                 </select>
             </div>
+
+            <div class="w-100" style="max-width: 300px;">
+                <label for="buscador" class="form-label fw-bold">Buscar residuo</label>
+                <input type="text" id="buscador" class="form-control border-dark" placeholder="Escribe para buscar...">
+            </div>
+
         </div>
 
         
@@ -217,6 +223,41 @@
         });
     
         // Mostrar solo encabezados de grupo que tengan residuos visibles debajo
+        const encabezados = document.querySelectorAll("tbody tr.table-secondary");
+        encabezados.forEach(encabezado => {
+            let siguiente = encabezado.nextElementSibling;
+            let mostrarEncabezado = false;
+    
+            while (siguiente && !siguiente.classList.contains("table-secondary")) {
+                if (siguiente.style.display !== "none") {
+                    mostrarEncabezado = true;
+                    break;
+                }
+                siguiente = siguiente.nextElementSibling;
+            }
+    
+            encabezado.style.display = mostrarEncabezado ? "" : "none";
+        });
+    });
+
+
+    document.getElementById("buscador").addEventListener("input", function () {
+        const filtroTexto = this.value.toLowerCase().trim();
+    
+        document.querySelectorAll("tbody tr").forEach(tr => {
+            const tipoFila = tr.getAttribute("data-tipo");
+            const celdaResiduo = tr.children[1]; 
+    
+            if (tipoFila && celdaResiduo) {
+                const textoResiduo = celdaResiduo.textContent.toLowerCase();
+                const mostrar = textoResiduo.includes(filtroTexto);
+    
+                tr.style.display = mostrar ? "" : "none";
+            } else if (tr.classList.contains("table-secondary")) {
+                tr.style.display = "none";
+            }
+        });
+    
         const encabezados = document.querySelectorAll("tbody tr.table-secondary");
         encabezados.forEach(encabezado => {
             let siguiente = encabezado.nextElementSibling;
