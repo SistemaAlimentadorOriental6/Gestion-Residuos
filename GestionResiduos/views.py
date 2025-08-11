@@ -165,10 +165,99 @@ def formularioResiduos(request):
     precios_json = mark_safe(json.dumps(precios_dict, cls=DjangoJSONEncoder))
 
     residuos_por_tipo = {
-        "Aprovechable": ["Acero Inoxidable - KG", "Aluminio Limpio - KG", "Aluminio Sucio - KG", "Bidón 55 - UND", "Bidón 5 - UND", "Cartón - KG", "Chatarra Metálica - KG", "Cobre - KG", "Filtro de Aceite - KG", "Hierro Gris - KG", "Isotanque Base Madera - UND", "Isotanque Base Metálica - UND", "Papel Archivo - KG", "Papel Periódico - KG", "Pasta de Archivo AZ - KG", "Pasta por Seleccionar - KG", "Pasta Seleccionada - KG", "Pet por Seleccionar - KG", "Pet Transparente - KG", "Plástico por Seleccionar - KG", "Plástico Seleccionado - KG", "Plegadiza - KG", "Plomo - KG", "Intercooler Aluminio - KG", "PVC - KG", "Radiador Aluminio - KG", "Radiador Cobre - KG"],  # omitir para brevedad
-        "Especial": ["Fibra de Vidrio - MT3", "Filtro de Aire - MT3", "Madera - KG", "Pastas Sillas - KG", "Vidrio - MT3", "Bloques de Freno - MT3"],
-        "Respel": ["Agua Contaminada con Hidrocarburo - KG", "Filtro de Aceite - KG", "Filtro de Aceite Cartón - KG", "Grasa Usada - KG", "Lodos - KG", "Luminarias - KG", "Raee - KG", "Refrigerante - KG", "Sólidos Contaminados con Pintura - KG", "Sólidos Contaminados con Hidrocarburos - KG", "Thinner Contaminado - KG", "Thonner - KG"],
-        "Respel Aprovechable": ["Aceite Usado - KG", "Batería 4 DLT 4D - UND", "Batería Ácido Plomo 24R - UND", "Batería Ácido Plomo 30-31H - UND", "Batería Ácido Plomo 65-G4-27 - UND", "Batería UPS - UND"]
+        "Aprovechable": [
+            "Acero Inoxidable - KG",
+            "Aluminio Limpio - KG",
+            "Aluminio Sucio - KG",
+            "Bidón Metálico * 55 gal - UND",
+            "Bidón Metálico * 55 gal Malo - UND",
+            "Bidón Plástico * 5 gal - UND",
+            "Bronce - KG",
+            "Cartón - KG",
+            "Chatarra Metálica - KG",
+            "Cobre Contaminado - KG",
+            "Cobre Encauchetado - KG",
+            "Filtro de Aceite - KG",
+            "Hierro Gris - KG",
+            "Intercooler Aluminio - KG",
+            "Isotanque Base Madera - UND",
+            "Isotanque Base Metálica - UND",
+            "Inversor 3 KP - UND",
+            "Inversor Cargador - KG",
+            "Madera - KG",
+            "Material Mixto - KG",
+            "Material para Catalizador - KG",
+            "Motor Eléctrico Usado (Bus Articulado) - KG",
+            "Panel Solar 1650 * 992 - UND",
+            "Papel Archivo - KG",
+            "Papel Archivo AZ - KG",
+            "Papel Kraft - KG",
+            "Papel Mixto - KG",
+            "Papel Periódico - KG",
+            "Pasta de Archivo AZ - KG",
+            "Pasta por Seleccionar - KG",
+            "Pasta Seleccionada - KG",
+            "Pet por Seleccionar - KG",
+            "Pet Transparente - KG",
+            "Plástico por Seleccionar - KG",
+            "Plástico Seleccionado - KG",
+            "Plegadiza Limpia - KG",
+            "Plomo - KG",
+            "PVC - KG",
+            "Radiador Aluminio - KG",
+            "Radiador Cobre - KG",
+            "Tetra Pak - KG",
+            "Vidrio - KG"
+        ],
+
+        "Especial": [
+            "Bloques de Freno - MT3",
+            "Fibra de Vidrio - MT3",
+            "Filtro de Aire - MT3",
+            "Madera - KG",
+            "Pasta por Selección - KG",
+            "Pastas Sillas - KG",
+            "Residuo Vegetal - MT3",
+            "Vidrio - MT3",
+            "Vidrio Panorámico - MT3"
+        ],    
+        
+        "Respel": [
+            "Agua Contaminada con Hidrocarburo - KG",
+            "Filtro de Aceite Cartón - KG",
+            "Filtros de Aceite - KG",
+            "Filtro de Aire - KG",
+            "Grasa Usada - KG",
+            "Lodos - KG",
+            "Líquido Inflamable (Gasolina) - KG",
+            "Luminarias - KG",
+            "Material Cortopunzante - KG",
+            "Raee - KG",
+            "Refrigerante Usado - KG",
+            "Residuos Químicos Líquidos - KG",
+            "Sólidos Contaminados con Hidrocarburos - KG",
+            "Sólidos Contaminados con Pintura - KG",
+            "Thinner Contaminado - KG",
+            "Thonner - KG"
+        ],        
+        
+        "Respel Aprovechable": [
+            "Aceite Usado - KG",
+            "Batería 27 H - UND",
+            "Batería 34 D - UND",
+            "Batería 34 H - UND",
+            "Batería 34 RST - UND",
+            "Batería 4 DLT 4D - UND",
+            "Batería Ácido Plomo 24R - UND",
+            "Batería Ácido Plomo 30-31H - UND",
+            "Batería Ácido Plomo 65-G4-27 - UND",
+            "Batería Caja 42 - UND",
+            "Batería Grupo 0,7 - UND",
+            "Batería Grupo 1 - UND",
+            "Batería Grupo 8 - UND",
+            "Batería Moto - UND",
+            "Batería UPS - UND"
+        ]   
     }
 
     grupos_pendientes = []
