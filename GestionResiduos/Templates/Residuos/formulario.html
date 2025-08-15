@@ -72,6 +72,22 @@
 
         </div>
 
+        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mt-4 mb-3">
+            <div class="w-100" style="max-width: 300px;">
+                <label for="proveedor" class="form-label fw-bold">Seleccione el Recolector</label>
+                <select id="proveedor" name="proveedor" class="form-select border-dark" required>
+                    <option value="">Seleccione</option>
+                    <option value="Emvarias">Emvarias</option>
+                    <option value="Ecorecyclar">Ecorecyclar</option>
+                    <option value="Ecotransa">Ecotransa</option>
+                    <option value="Fumigar">Fumigar</option>
+                    <option value="Green Delta">Green Delta</option>
+                    <option value="Impart - Clarios">Impart - Clarios</option>
+                </select>         
+            </div>
+            
+        </div>
+
         
         <div class="card rounded-card">
             <div class="card-header brand-header">
@@ -143,6 +159,8 @@
         </div>
     </form>
 </div>
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -276,6 +294,35 @@
     });
 
 
+    document.getElementById('boton-enviar').addEventListener('click', function(e) {
+        const proveedor = document.getElementById('proveedor').value;
+
+        if (!proveedor) {
+            Swal.fire({
+                icon: 'error',
+                title: '¡Oops!',
+                text: 'Por favor, selecciona un recolector antes de continuar.',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#6ba43a',  
+                background: '#ffffff',  
+                iconColor: '#dc3545', 
+                customClass: {
+                    popup: 'animated bounceInDown', 
+                    title: 'swal-title',
+                    content: 'swal-content',
+                    confirmButton: 'swal-confirm-button' 
+                },
+                showClass: {
+                    popup: 'swal2-popup-show'
+                },
+                hideClass: {
+                    popup: 'swal2-popup-hide'
+                },
+            });
+
+            e.preventDefault(); 
+        }
+    });
 
 </script>
 {% endblock %}

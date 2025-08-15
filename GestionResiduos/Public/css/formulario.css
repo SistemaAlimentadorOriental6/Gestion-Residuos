@@ -54,6 +54,29 @@ label{
 }
 
 
+
+.swal-confirm-button {
+    box-shadow: none !important; 
+    background-color: #6ba43a !important; 
+    color: white !important; 
+    border-radius: 5px;      
+    padding: 10px 20px;       
+    font-size: 1rem;         
+    transition: background-color 0.3s, transform 0.2s;  
+}
+
+.swal-confirm-button:hover {
+    background-color: #5a9230 !important; 
+    transform: scale(1.05);  
+}
+
+.swal-confirm-button:focus {
+    outline: none !important;  
+}
+
+
+
+
 @media (max-width: 600px) {
     .form-container{
         width: 100%;

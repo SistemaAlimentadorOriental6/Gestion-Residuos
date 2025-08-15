@@ -42,6 +42,8 @@ class FormularioPerfil1(models.Model):
     costo_total = models.IntegerField()
     grupo_codigo = models.ForeignKey(GrupoResiduo, on_delete=models.CASCADE)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    proveedor = models.CharField(max_length=100)
+
 
     def __str__(self):
         return f"{self.grupo.codigo} - Perfil 1"
@@ -61,6 +63,7 @@ class FormularioPerfil2(models.Model):
     cantidad = models.IntegerField()
     grupo_codigo = models.ForeignKey(GrupoResiduo, on_delete=models.CASCADE)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    proveedor = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.grupo.codigo} - Perfil 2"

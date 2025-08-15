@@ -37,6 +37,7 @@ def formularioResiduos(request):
 
     if request.method == 'POST':
         seleccionados = request.POST.getlist('seleccionados')
+        proveedor = request.POST.get("proveedor")
         if not seleccionados:
             messages.warning(request, "No seleccionaste ningún residuo.")
             return redirect('formularioResiduos')
@@ -122,7 +123,8 @@ def formularioResiduos(request):
                     costo_unitario=costo_unitario,
                     costo_total=costo_total,
                     grupo_codigo=grupo,
-                    usuario=request.user
+                    usuario=request.user,
+                    proveedor=proveedor
                 )
 
                 if not ResiduoPrecio.objects.filter(residuo=residuo).exists():
@@ -139,7 +141,9 @@ def formularioResiduos(request):
                     peso=peso,
                     cantidad=int(cantidad),
                     grupo_codigo=grupo,
-                    usuario=request.user
+                    usuario=request.user,
+                    proveedor=proveedor
+
                 )
 
             perfil1_ok = FormularioPerfil1.objects.filter(grupo_codigo=grupo).exists()
