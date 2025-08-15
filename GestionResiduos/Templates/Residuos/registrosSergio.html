@@ -59,6 +59,7 @@
                             <th>#</th>
                             <th>Fecha</th>
                             <th>Hora</th>
+                            <th>Recolector</th>
                             <th>Tipo Residuo</th>
                             <th>Residuo</th>
                             <th>Costo Unitario</th>
@@ -76,6 +77,17 @@
                                 <td class="columna-numero"><b></b></td>
                                 <td>{{ registro.fecha|date:"d/m/Y" }}</td>
                                 <td>{{ registro.hora }}</td>
+
+                                <td>
+                                    <select name="proveedor" class="form-select form-select-sm border-dark">
+                                        <option {% if registro.proveedor == "Emvarias" %}selected{% endif %}>Emvarias</option>
+                                        <option {% if registro.proveedor == "Ecoreclycar" %}selected{% endif %}>Ecoreclycar</option>
+                                        <option {% if registro.proveedor == "Ecotransa" %}selected{% endif %}>Ecotransa</option>
+                                        <option {% if registro.proveedor == "Green Delta" %}selected{% endif %}>Green Delta</option>
+                                        <option {% if registro.proveedor == "Fumigar" %}selected{% endif %}>Fumigar</option>
+                                        <option {% if registro.proveedor == "Impart - Clarios" %}selected{% endif %}>Impart - Clarios</option>
+                                    </select>
+                                </td>
                                 
                                 <td>
                                     <select name="tipo_residuo" class="form-select form-select-sm border-dark">

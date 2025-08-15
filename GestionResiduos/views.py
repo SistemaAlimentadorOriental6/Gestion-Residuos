@@ -490,6 +490,7 @@ def actualizarCostoTotal(request, registro_id):
 
     if request.method == 'POST':
         try:
+            registro.proveedor = request.POST.get('proveedor', registro.proveedor)
             registro.tipo_residuo = request.POST.get('tipo_residuo', registro.tipo_residuo)
             registro.residuo = request.POST.get('residuo', registro.residuo)
 
@@ -519,6 +520,7 @@ def actualizarRegistroVigilante(request, registro_id):
     
     if request.method == "POST":
         try:
+            registro.proveedor = request.POST.get('proveedor', registro.proveedor)
             registro.tipo_residuo = request.POST.get('tipo_residuo', registro.tipo_residuo)
             registro.residuo = request.POST.get('residuo', registro.residuo)
 
