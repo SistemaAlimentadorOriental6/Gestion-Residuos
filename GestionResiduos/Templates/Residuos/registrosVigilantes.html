@@ -29,6 +29,7 @@
                 <option value="Especial">Especial</option>
                 <option value="Respel">Respel</option>
                 <option value="Respel Aprovechable">Respel Aprovechable</option>
+                <option value="Post Consumo">Post Consumo</option>
             </select>
         </div>
         <div class="w-100" style="max-width: 300px;">
@@ -93,6 +94,8 @@
                                         <option {% if registro.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
                                         <option {% if registro.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
                                         <option {% if registro.tipo_residuo == "Respel Aprovechable" %}selected{% endif %}>Respel Aprovechable</option>
+                                        <option {% if registro.tipo_residuo == "Post Consumo" %}selected{% endif %}>Post Consumo</option>
+
                                     </select>
                                 </td>
                         

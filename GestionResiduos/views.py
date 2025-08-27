@@ -45,6 +45,7 @@ def formularioResiduos(request):
         registro_exitoso = False  # Bandera para controlar si al menos un residuo fue registrado
 
         for clave in seleccionados:
+            print(f"Caalve recibida{clave}")
             try:
                 tipo_residuo, residuo = clave.split(' - ', 1)
             except ValueError:
@@ -188,7 +189,6 @@ def formularioResiduos(request):
             "Isotanque Base Metálica - UND",
             "Inversor 3 KP - UND",
             "Inversor Cargador - KG",
-            "Madera - KG",
             "Material Mixto - KG",
             "Material para Catalizador - KG",
             "Motor Eléctrico Usado (Bus Articulado) - KG",
@@ -201,6 +201,7 @@ def formularioResiduos(request):
             "Pasta de Archivo AZ - KG",
             "Pasta por Seleccionar - KG",
             "Pasta Seleccionada - KG",
+            "Pasta Sillas - KG",
             "Pet por Seleccionar - KG",
             "Pet Transparente - KG",
             "Plástico por Seleccionar - KG",
@@ -215,22 +216,18 @@ def formularioResiduos(request):
         ],
 
         "Especial": [
-            "Bloques de Freno - MT3",
-            "Fibra de Vidrio - MT3",
-            "Filtro de Aire - MT3",
-            "Madera - KG",
-            "Pasta por Selección - KG",
-            "Pastas Sillas - KG",
-            "Residuo Vegetal - MT3",
-            "Vidrio - MT3",
-            "Vidrio Panorámico - MT3"
+            "Bloques de Freno - m³",
+            "Fibra de Vidrio - m³",
+            "Filtro de Aire - m³",
+            "Madera - m³",
+            "Residuo Vegetal - m³",
+            "Vidrio Panorámico - m³"
         ],    
         
         "Respel": [
             "Agua Contaminada con Hidrocarburo - KG",
             "Filtro de Aceite Cartón - KG",
             "Filtros de Aceite - KG",
-            "Filtro de Aire - KG",
             "Grasa Usada - KG",
             "Lodos - KG",
             "Líquido Inflamable (Gasolina) - KG",
@@ -246,7 +243,10 @@ def formularioResiduos(request):
         ],        
         
         "Respel Aprovechable": [
-            "Aceite Usado - KG",
+            "Aceite Usado * gal - UND"
+        ],
+        
+        "Post Consumo": [
             "Batería 27 H - UND",
             "Batería 34 D - UND",
             "Batería 34 H - UND",
@@ -308,7 +308,7 @@ def listadoAutorizaciones(request):
         registros_p1 = grupo.formularioperfil1_set.all()
         registros_p2 = grupo.formularioperfil2_set.all()
 
-        residuos_data = defaultdict(lambda: {'perfil1': 0, 'perfil2': 0, 'modo': 'peso'})
+        residuos_data = defaultdict(lambda: {'perfil1': 0, 'perfil2': 0, 'modo': 'peso', 'proveedor1': None, 'proveedor2': None})
 
         for r in registros_p1:
             key = r.residuo.lower().strip()
@@ -316,6 +316,7 @@ def listadoAutorizaciones(request):
             valor_p1 = r.cantidad if modo == 'cantidad' else float(r.peso or 0)
             residuos_data[key]['perfil1'] += valor_p1
             residuos_data[key]['modo'] = modo
+            residuos_data[key]['proveedor1'] = r.proveedor  # Asumiendo que "proveedor" es un campo en el modelo
 
         for r in registros_p2:
             key = r.residuo.lower().strip()
@@ -323,11 +324,23 @@ def listadoAutorizaciones(request):
             valor_p2 = r.cantidad if modo == 'cantidad' else float(r.peso or 0)
             residuos_data[key]['perfil2'] += valor_p2
             residuos_data[key]['modo'] = modo
+            residuos_data[key]['proveedor2'] = r.proveedor  # Asumiendo que "proveedor" es un campo en el modelo
 
         diferencias = []    
         for residuo, datos in residuos_data.items():
             v1, v2 = datos['perfil1'], datos['perfil2']
             modo = datos['modo']
+            proveedor1, proveedor2 = datos['proveedor1'], datos['proveedor2']
+
+            # Comprobar si el proveedor es diferente
+            if proveedor1 != proveedor2:
+                diferencias.append({
+                    'residuo': residuo,
+                    'modo': 'Proveedor',
+                    'proveedor1': proveedor1,
+                    'proveedor2': proveedor2,
+                    'mensaje': 'Proveedores diferentes'
+                })
 
             if modo == 'cantidad':
                 if v1 != v2:

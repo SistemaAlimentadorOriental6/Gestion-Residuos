@@ -62,6 +62,7 @@
                     <option value="Especial">Especial</option>
                     <option value="Respel">Respel</option>
                     <option value="Respel Aprovechable">Respel Aprovechable</option>
+                    <option value="Post Consumo">Post Consumo</option>
                 </select>
             </div>
 
@@ -124,14 +125,14 @@
                                         <td>{{ residuo }}</td>
                                         <td>
                                             {% if "UND" in residuo or "Batería" in residuo %}
-                                                <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" style="width: 130px;">
+                                                <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" style="width: 130px;" placeholder="UND">
                                             {% else %}
                                                 -
                                             {% endif %}
                                         </td>
                                         <td>
                                             {% if "UND" not in residuo and "Batería" not in residuo %}
-                                                <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black" style="width: 130px;">
+                                                <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black" style="width: 130px;" placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}">
                                             {% else %}
                                                 -
                                             {% endif %}
@@ -256,26 +257,57 @@
     
             encabezado.style.display = mostrarEncabezado ? "" : "none";
         });
-    });
-
-
-    document.getElementById("buscador").addEventListener("input", function () {
-        const filtroTexto = this.value.toLowerCase().trim();
     
+        // Cambio de unidades en el placeholder
         document.querySelectorAll("tbody tr").forEach(tr => {
             const tipoFila = tr.getAttribute("data-tipo");
+    
+            // Cambiar los placeholders de los campos 'peso' a 'm³' si el tipo es Especial
+            tr.querySelectorAll('input[name^="peso_"]').forEach(input => {
+                if (tipoFila === "especial") {
+                    input.placeholder = "m³";  // Cambiar a m³ para los residuos especiales
+                } else {
+                    input.placeholder = "KG";  // Dejar en kg para los otros residuos
+                }
+            });
+        });
+    });
+    
+    // Disparar la búsqueda al cambiar el tipo
+    document.getElementById("filtroTipo").addEventListener("change", function () {
+        // Vuelve a ejecutar la búsqueda después de seleccionar un tipo
+        document.getElementById("buscador").dispatchEvent(new Event("input"));
+    });
+
+    document.getElementById("filtroTipo").addEventListener("change", function () {
+        // Vuelve a ejecutar la búsqueda después de seleccionar un tipo
+        document.getElementById("buscador").dispatchEvent(new Event("input"));
+    });
+    
+    // Evento para buscar residuos
+    document.getElementById("buscador").addEventListener("input", function () {
+        const filtroTexto = this.value.toLowerCase().trim();
+        const tipoSeleccionado = document.getElementById("filtroTipo").value.toLowerCase().trim();
+        
+        document.querySelectorAll("tbody tr").forEach(tr => {
+            // Verificamos que la fila tenga el atributo 'data-tipo'
+            const tipoFila = tr.getAttribute("data-tipo") ? tr.getAttribute("data-tipo").toLowerCase() : "";
             const celdaResiduo = tr.children[1]; 
+            
+            // Si existe la celda de residuo, se toma su texto y se compara con el filtro de texto
+            const textoResiduo = celdaResiduo ? celdaResiduo.textContent.toLowerCase() : "";
+            const coincideTexto = textoResiduo.includes(filtroTexto);
+            
+            // Si hay un tipo seleccionado, comparamos con el tipo de la fila
+            const coincideTipo = tipoSeleccionado === "" || tipoFila === tipoSeleccionado;
     
-            if (tipoFila && celdaResiduo) {
-                const textoResiduo = celdaResiduo.textContent.toLowerCase();
-                const mostrar = textoResiduo.includes(filtroTexto);
-    
-                tr.style.display = mostrar ? "" : "none";
-            } else if (tr.classList.contains("table-secondary")) {
-                tr.style.display = "none";
-            }
+            // Solo mostrar la fila si cumple ambos filtros: texto y tipo
+            const mostrar = coincideTexto && coincideTipo;
+            
+            tr.style.display = mostrar ? "" : "none";
         });
     
+        // Lógica para mostrar u ocultar encabezados de grupos
         const encabezados = document.querySelectorAll("tbody tr.table-secondary");
         encabezados.forEach(encabezado => {
             let siguiente = encabezado.nextElementSibling;
