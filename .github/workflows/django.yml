@@ -2,7 +2,7 @@ name: Django Gestión Tareas
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -28,7 +28,7 @@ jobs:
         run: python manage.py test
 
   deploy:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
 
