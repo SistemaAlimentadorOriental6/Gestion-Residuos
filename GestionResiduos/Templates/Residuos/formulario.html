@@ -132,7 +132,12 @@
                                         </td>
                                         <td>
                                             {% if "UND" not in residuo and "Batería" not in residuo %}
-                                                <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black" style="width: 130px;" placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}">
+                                                <div class="input-group gap-3" style="width: 180px;">
+                                                    <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black peso-total" placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}" data-clave="{{ clave }}">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCaneca" data-clave="{{ clave }}" id="boton-mas">
+                                                        + 
+                                                    </button>
+                                                </div>
                                             {% else %}
                                                 -
                                             {% endif %}
@@ -158,6 +163,30 @@
         <div class="d-flex justify-content-center">
             <button type="submit" class="btn btn-success mt-5" id="boton-enviar">Guardar Seleccionados</button>
         </div>
+
+
+        <div class="modal fade" id="modalCaneca" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Agregar Caneca</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <label>Peso chatarra (lleno)</label>
+                  <input type="number" step="0.01" id="pesoLleno" class="form-control mb-2 border-black">
+          
+                  <label>Peso caneca (vacío)</label>
+                  <input type="number" step="0.01" id="pesoVacio" class="form-control mb-2 border-black">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary border-black" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="button" class="btn btn-success" id="guardarCaneca">Guardar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
     </form>
 </div>
 
@@ -354,6 +383,43 @@
 
             e.preventDefault(); 
         }
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let claveActual = null; // fila/residuo en uso
+    
+        // Al abrir el modal desde el botón
+        document.querySelectorAll("[data-bs-target='#modalCaneca']").forEach(btn => {
+            btn.addEventListener("click", function () {
+                claveActual = this.dataset.clave;
+                document.getElementById("pesoLleno").value = "";
+                document.getElementById("pesoVacio").value = "";
+            });
+        });
+    
+        // Al guardar en el modal
+        document.getElementById("guardarCaneca").addEventListener("click", function () {
+            const lleno = parseFloat(document.getElementById("pesoLleno").value) || 0;
+            const vacio = parseFloat(document.getElementById("pesoVacio").value) || 0;
+            const neto = lleno - vacio;
+    
+            if (neto <= 0) {
+                alert("El peso neto debe ser mayor a 0");
+                return;
+            }
+    
+            // Buscar input de esa fila
+            const inputPeso = document.querySelector(`input[name='peso_${claveActual}']`);
+            const totalActual = parseFloat(inputPeso.value) || 0;
+    
+            // Sumar el nuevo neto
+            inputPeso.value = (totalActual + neto).toFixed(2);
+    
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById("modalCaneca"));
+            modal.hide();
+        });
     });
 
 </script>

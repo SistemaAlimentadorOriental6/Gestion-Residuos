@@ -2,12 +2,10 @@ from collections import defaultdict
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout
-from django.utils.timezone import now
 from GestionResiduos.models import FormularioPerfil1, FormularioPerfil2, GrupoResiduo, AutorizacionSalida, ResiduoPrecio
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden
-from django.utils.timezone import localtime
 from django.utils.safestring import mark_safe
 from django.core.serializers.json import DjangoJSONEncoder
 import json
@@ -20,6 +18,7 @@ from openpyxl.utils import get_column_letter
 from django.db.models.functions import ExtractMonth, ExtractYear
 from decimal import Decimal
 import uuid
+from django.core.paginator import Paginator
 
 
 
@@ -527,7 +526,7 @@ def actualizarCostoTotal(request, registro_id):
 
 
 
-
+@login_required
 def actualizarRegistroVigilante(request, registro_id):
     registro = get_object_or_404(FormularioPerfil2, id=registro_id)
     
@@ -569,7 +568,7 @@ def actualizarRegistroVigilante(request, registro_id):
 
 
 
-
+@login_required
 def generarExcel(request, registro_id):
     registro_base = FormularioPerfil1.objects.get(pk=registro_id)
     fecha_base = registro_base.fecha
@@ -668,6 +667,27 @@ def generarExcel(request, registro_id):
         response['Content-Disposition'] = f'inline; filename="{nombre_archivo}"'
         return response
     
+    
+    
+    
+    
+@login_required
+def historialAutorizaciones(request):
+    usuario = request.user
+    historial = AutorizacionSalida.objects.filter(
+        autorizador=usuario,
+        estado__in=['autorizado', 'rechazado']
+    ).select_related('grupo_codigo').order_by('-fecha_autorizacion')
+
+    # Paginación
+    paginator = Paginator(historial, 10)  # Mostrar 10 elementos por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+    }
+    return render(request, 'Residuos/historialAutorizaciones.html', context)
     
     
     

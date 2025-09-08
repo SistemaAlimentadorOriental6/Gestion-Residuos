@@ -39,6 +39,19 @@ label{
 }
 
 
+#guardarCaneca{
+    background-color: #6ba43a;
+    color: white;
+    border: 2px solid black;
+}
+
+
+#boton-mas{
+    background-color: #6ba43a;
+    color: white;
+    border: 2px solid black;
+}
+
 .brand-header {
     background-color: #6ba43a !important;
     color: white;

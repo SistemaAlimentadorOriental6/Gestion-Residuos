@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Autorizaciones{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-5 text-white py-2 rounded" style="background-color: #6ba43a;">
+        <b>Historial de Autorizaciones</b>
+    </h3>
+
+    {% if messages %}
+        <div class="d-flex justify-content-center mt-3">
+            <div style="width: 100%; max-width: 600px;">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} text-center py-2 px-3 mb-4" style="font-size: 0.9rem; border-radius: 0.5rem;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% for item in page_obj %}
+        {% with grupo=item.grupo_codigo %}
+        <div class="card shadow borde-input mb-4">
+            <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Grupo: <span class="text-dark">{{ grupo.codigo }}</span></h5>
+                <span class="badge {% if item.estado == 'autorizado' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ item.estado|capfirst }}
+                </span>
+            </div>
+            <div class="card-body">
+
+                {% if item.diferencia %}
+                    <div class="alert alert-warning text-center fw-bold">
+                        ⚠️ Diferencia registrada: {{ item.diferencia }}
+                    </div>
+                {% endif %}
+
+                <div class="mb-4">
+                    <h6 class="text-secondary">Residuo Registrado por Vigilancia</h6>
+                    <ul class="list-group borde-input">
+                        {% for registro in grupo.formularioperfil1_set.all %}
+                            <li class="list-group-item">
+                                {{ registro.fecha|date:"d/m/Y" }} - {{ registro.hora }} |
+                                {{ registro.proveedor }} |
+                                {{ registro.tipo_residuo }} - {{ registro.residuo }} |
+                                {% if registro.peso %}
+                                    <b>Peso:</b> {{ registro.peso }}
+                                {% elif registro.cantidad %}
+                                    <b>Cantidad:</b> {{ registro.cantidad }}
+                                {% else %}
+                                    <b>Sin valor</b>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">No hay registros.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="text-secondary">Residuo Registrado por SGI</h6>
+                    <ul class="list-group borde-input">
+                        {% for registro in grupo.formularioperfil2_set.all %}
+                            <li class="list-group-item">
+                                {{ registro.fecha|date:"d/m/Y" }} - {{ registro.hora }} |
+                                {{ registro.proveedor }} |
+                                {{ registro.tipo_residuo }} - {{ registro.residuo }} |
+                                {% if registro.peso %}
+                                    <b>Peso:</b> {{ registro.peso }}
+                                {% elif registro.cantidad %}
+                                    <b>Cantidad:</b> {{ registro.cantidad }}
+                                {% else %}
+                                    <b>Sin valor</b>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">No hay registros.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                {% if item.observacion %}
+                    <div>
+                        <strong>Observación:</strong> {{ item.observacion }}
+                    </div>
+                {% endif %}
+
+                <div class="text-end text-muted small">
+                    Autorizado el {{ item.fecha_autorizacion|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+    {% empty %}
+        <div class="alert alert-info text-center">
+            No hay autorizaciones realizadas aún.
+        </div>
+    {% endfor %}
+
+    <!-- Paginación adaptada -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mt-4">
+            
+            <!-- Botón de "Anterior" -->
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Anterior</span>
+                </li>
+            {% endif %}
+
+            <!-- Enlace a la primera página si es necesario -->
+            {% if page_obj.number > 3 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">1</a>
+                </li>
+                {% if page_obj.number > 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            <!-- Numeración de las páginas cercanas a la actual -->
+            {% for num in page_obj.paginator.page_range %}
+                {% if num >= page_obj.number|add:'-1' and num <= page_obj.number|add:'1' %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            <!-- Enlace a la última página si es necesario -->
+            {% if page_obj.number < page_obj.paginator.num_pages|add:'-2' %}
+                {% if page_obj.number < page_obj.paginator.num_pages|add:'-3' %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                {% endif %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+                </li>
+            {% endif %}
+
+            <!-- Botón de "Siguiente" -->
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">Siguiente</span>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+
+</div>
+{% endblock %}

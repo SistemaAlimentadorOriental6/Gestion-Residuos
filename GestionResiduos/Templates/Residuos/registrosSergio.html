@@ -80,9 +80,9 @@
                                 <td>{{ registro.hora }}</td>
 
                                 <td>
-                                    <select name="proveedor" class="form-select form-select-sm border-dark">
+                                    <select name="proveedor" class="form-select form-select-sm border-dark" style="width: auto;">
                                         <option {% if registro.proveedor == "Emvarias" %}selected{% endif %}>Emvarias</option>
-                                        <option {% if registro.proveedor == "Ecoreclycar" %}selected{% endif %}>Ecoreclycar</option>
+                                        <option {% if registro.proveedor == "Ecorecyclar" %}selected{% endif %}>Ecorecyclar</option>
                                         <option {% if registro.proveedor == "Ecotransa" %}selected{% endif %}>Ecotransa</option>
                                         <option {% if registro.proveedor == "Green Delta" %}selected{% endif %}>Green Delta</option>
                                         <option {% if registro.proveedor == "Fumigar" %}selected{% endif %}>Fumigar</option>
@@ -91,7 +91,7 @@
                                 </td>
                                 
                                 <td>
-                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark">
+                                    <select name="tipo_residuo" class="form-select form-select-sm border-dark" style="width: auto;">
                                         <option {% if registro.tipo_residuo == "Aprovechable" %}selected{% endif %}>Aprovechable</option>
                                         <option {% if registro.tipo_residuo == "Especial" %}selected{% endif %}>Especial</option>
                                         <option {% if registro.tipo_residuo == "Respel" %}selected{% endif %}>Respel</option>
@@ -101,7 +101,7 @@
                                 </td>
                         
                                 <td>
-                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo">
+                                    <select name="residuo" class="form-select form-select-sm border-black select-residuo" style="width: auto;">
                                         <option value="{{ registro.residuo }}">{{ registro.residuo }}</option>
                                     </select>
                                 </td>
