@@ -125,7 +125,14 @@
                                         <td>{{ residuo }}</td>
                                         <td>
                                             {% if "UND" in residuo or "Batería" in residuo %}
-                                                <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" style="width: 130px;" placeholder="UND">
+                                                <div class="input-group gap-3" style="width: 180px;">
+
+                                                    <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" placeholder="UND">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalUnidades" data-clave="{{ clave }}" id="boton-mas-unidades">
+                                                        +
+                                                    </button>
+                                                </div>
+
                                             {% else %}
                                                 -
                                             {% endif %}
@@ -169,14 +176,14 @@
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title">Agregar Caneca</h5>
+                  <h5 class="modal-title">Agregar Peso Caneca</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                  <label>Peso chatarra (lleno)</label>
+                  <label>Peso Residuo (lleno)</label>
                   <input type="number" step="0.01" id="pesoLleno" class="form-control mb-2 border-black">
           
-                  <label>Peso caneca (vacío)</label>
+                  <label>Peso Caneca (vacía)</label>
                   <input type="number" step="0.01" id="pesoVacio" class="form-control mb-2 border-black">
                 </div>
                 <div class="modal-footer">
@@ -185,7 +192,27 @@
                 </div>
               </div>
             </div>
-          </div>
+        </div>
+
+
+        <div class="modal fade" id="modalUnidades" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Unidades</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label>Unidades</label>
+                        <input type="number" step="1" id="cantidadUnidades" class="form-control mb-2 border-black">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary border-black" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success" id="guardarUnidades">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     </form>
 </div>
@@ -387,9 +414,8 @@
 
 
     document.addEventListener("DOMContentLoaded", function () {
-        let claveActual = null; // fila/residuo en uso
+        let claveActual = null; 
     
-        // Al abrir el modal desde el botón
         document.querySelectorAll("[data-bs-target='#modalCaneca']").forEach(btn => {
             btn.addEventListener("click", function () {
                 claveActual = this.dataset.clave;
@@ -398,29 +424,64 @@
             });
         });
     
-        // Al guardar en el modal
         document.getElementById("guardarCaneca").addEventListener("click", function () {
             const lleno = parseFloat(document.getElementById("pesoLleno").value) || 0;
             const vacio = parseFloat(document.getElementById("pesoVacio").value) || 0;
             const neto = lleno - vacio;
     
-            if (neto <= 0) {
-                alert("El peso neto debe ser mayor a 0");
+            if (lleno === 0 && vacio === 0) {
+                alert("Debe ingresar al menos el peso del residuo o de la caneca vacía.");
                 return;
             }
     
-            // Buscar input de esa fila
             const inputPeso = document.querySelector(`input[name='peso_${claveActual}']`);
             const totalActual = parseFloat(inputPeso.value) || 0;
     
-            // Sumar el nuevo neto
-            inputPeso.value = (totalActual + neto).toFixed(2);
+            if (lleno === 0 && vacio > 0) {
+                inputPeso.value = (totalActual - vacio).toFixed(2);
+            } else {
+                inputPeso.value = (totalActual + neto).toFixed(2);
+            }
     
-            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById("modalCaneca"));
             modal.hide();
         });
     });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let claveActual = null; // fila/residuo en uso
+    
+        // Al abrir el modal de unidades desde el botón
+        document.querySelectorAll("[data-bs-target='#modalUnidades']").forEach(btn => {
+            btn.addEventListener("click", function () {
+                claveActual = this.dataset.clave;
+                document.getElementById("cantidadUnidades").value = "";
+            });
+        });
+    
+        // Al guardar en el modal de unidades
+        document.getElementById("guardarUnidades").addEventListener("click", function () {
+            const cantidad = parseInt(document.getElementById("cantidadUnidades").value) || 0;
+    
+            if (cantidad <= 0) {
+                alert("La cantidad de unidades debe ser mayor a 0");
+                return;
+            }
+    
+            // Buscar el input de cantidad de esa fila
+            const inputCantidad = document.querySelector(`input[name='cantidad_${claveActual}']`);
+            const totalActual = parseInt(inputCantidad.value) || 0;
+    
+            // Sumar el nuevo valor de unidades
+            inputCantidad.value = (totalActual + cantidad);
+    
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById("modalUnidades"));
+            modal.hide();
+        });
+    });
+
 
 </script>
 {% endblock %}

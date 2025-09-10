@@ -181,6 +181,7 @@ def formularioResiduos(request):
             "Chatarra Metálica - KG",
             "Cobre Contaminado - KG",
             "Cobre Encauchetado - KG",
+            "Cobre Rojo - KG",
             "Filtro de Aceite - KG",
             "Hierro Gris - KG",
             "Intercooler Aluminio - KG",
