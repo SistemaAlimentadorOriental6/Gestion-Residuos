@@ -174,23 +174,29 @@
 
         <div class="modal fade" id="modalCaneca" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Agregar Peso Caneca</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Agregar Peso Residuo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label>Peso Residuo (con o sin caneca)</label>
+                        <input type="number" step="0.01" id="pesoLleno" class="form-control mb-2 border-black">
+        
+                        <label>Peso Caneca (si aplica)</label>
+                        <input type="number" step="0.01" id="pesoVacio" class="form-control mb-2 border-black">
+        
+                        <h6>Historial de Pesos Ingresados:</h6>
+                        <ul id="historialPesos" class="list-group mb-2">
+                            
+                        </ul>
+                        <p><strong>Total general:</strong> <span id="totalGeneral">0.00</span> kg</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary border-black" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success" id="guardarCaneca">Guardar</button>
+                    </div>
                 </div>
-                <div class="modal-body">
-                  <label>Peso Residuo (lleno)</label>
-                  <input type="number" step="0.01" id="pesoLleno" class="form-control mb-2 border-black">
-          
-                  <label>Peso Caneca (vacía)</label>
-                  <input type="number" step="0.01" id="pesoVacio" class="form-control mb-2 border-black">
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary border-black" data-bs-dismiss="modal">Cancelar</button>
-                  <button type="button" class="btn btn-success" id="guardarCaneca">Guardar</button>
-                </div>
-              </div>
             </div>
         </div>
 
@@ -412,15 +418,49 @@
         }
     });
 
-
     document.addEventListener("DOMContentLoaded", function () {
-        let claveActual = null; 
+        let claveActual = null;
+        let historiales = {};
+    
+        function actualizarHistorial(clave) {
+            const historialList = document.getElementById("historialPesos");
+            const totalGeneralSpan = document.getElementById("totalGeneral");
+            const inputPeso = document.querySelector(`input[name='peso_${clave}']`);
+            
+            historialList.innerHTML = "";
+            const historial = historiales[clave] || [];
+            let totalGeneral = 0;
+    
+            historial.forEach((registro, index) => {
+                const lleno = registro.lleno.toFixed(2);
+                const vacio = registro.vacio.toFixed(2);
+                const neto = registro.neto.toFixed(2);
+                totalGeneral += parseFloat(neto);
+    
+                const listItem = document.createElement("li");
+                listItem.classList.add("list-group-item");
+                listItem.innerHTML = `${index + 1}: Residuo ${lleno} kg | Caneca ${vacio} kg | Total ${neto} kg 
+                    <button class="btn btn-danger btn-sm ms-2" onclick="confirmarEliminar('${clave}', ${index})">
+                        <i class="fas fa-trash-alt"></i> <!-- Icono de papelera -->
+                    </button>`;
+                historialList.appendChild(listItem);
+            });
+    
+            totalGeneralSpan.textContent = totalGeneral.toFixed(2);
+    
+            if (inputPeso) {
+                inputPeso.value = totalGeneral.toFixed(2);
+                // Disparar evento para recalcular total después de actualizar peso
+                inputPeso.dispatchEvent(new Event('input'));
+            }
+        }
     
         document.querySelectorAll("[data-bs-target='#modalCaneca']").forEach(btn => {
             btn.addEventListener("click", function () {
                 claveActual = this.dataset.clave;
                 document.getElementById("pesoLleno").value = "";
                 document.getElementById("pesoVacio").value = "";
+                actualizarHistorial(claveActual);
             });
         });
     
@@ -430,29 +470,65 @@
             const neto = lleno - vacio;
     
             if (lleno === 0 && vacio === 0) {
-                alert("Debe ingresar al menos el peso del residuo o de la caneca vacía.");
+                Swal.fire({
+                    icon: 'warning',
+                    title: '¡Atención!',
+                    text: 'Debe ingresar al menos el peso del residuo o de la caneca vacía.',
+                    confirmButtonText: 'Aceptar'
+                });
                 return;
             }
     
-            const inputPeso = document.querySelector(`input[name='peso_${claveActual}']`);
-            const totalActual = parseFloat(inputPeso.value) || 0;
-    
-            if (lleno === 0 && vacio > 0) {
-                inputPeso.value = (totalActual - vacio).toFixed(2);
-            } else {
-                inputPeso.value = (totalActual + neto).toFixed(2);
+            if (!historiales[claveActual]) {
+                historiales[claveActual] = [];
             }
+    
+            historiales[claveActual].push({
+                lleno: parseFloat(lleno.toFixed(2)),
+                vacio: parseFloat(vacio.toFixed(2)),
+                neto: parseFloat(neto.toFixed(2))
+            });
+    
+            actualizarHistorial(claveActual);
     
             const modal = bootstrap.Modal.getInstance(document.getElementById("modalCaneca"));
             modal.hide();
         });
-    });
-
-
-    document.addEventListener("DOMContentLoaded", function () {
-        let claveActual = null; // fila/residuo en uso
     
-        // Al abrir el modal de unidades desde el botón
+        // Función de confirmación para eliminar el registro
+        window.confirmarEliminar = function(clave, index) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "¡Este registro será eliminado permanentemente!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6ba43a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    eliminarRegistro(clave, index);
+                    Swal.fire(
+                        'Eliminado!',
+                        'El registro ha sido eliminado.',
+                        'success'
+                    );
+                }
+            });
+        };
+    
+        // Función para eliminar el registro
+        window.eliminarRegistro = function(clave, index) {
+            historiales[clave].splice(index, 1);
+            actualizarHistorial(clave);
+        };
+    });
+    
+    // Código para modal de unidades
+    document.addEventListener("DOMContentLoaded", function () {
+        let claveActual = null;
+    
         document.querySelectorAll("[data-bs-target='#modalUnidades']").forEach(btn => {
             btn.addEventListener("click", function () {
                 claveActual = this.dataset.clave;
@@ -460,28 +536,25 @@
             });
         });
     
-        // Al guardar en el modal de unidades
         document.getElementById("guardarUnidades").addEventListener("click", function () {
             const cantidad = parseInt(document.getElementById("cantidadUnidades").value) || 0;
-    
+            
             if (cantidad <= 0) {
                 alert("La cantidad de unidades debe ser mayor a 0");
                 return;
             }
     
-            // Buscar el input de cantidad de esa fila
             const inputCantidad = document.querySelector(`input[name='cantidad_${claveActual}']`);
             const totalActual = parseInt(inputCantidad.value) || 0;
-    
-            // Sumar el nuevo valor de unidades
+            
             inputCantidad.value = (totalActual + cantidad);
+            
+            // Disparar evento para recalcular total después de actualizar cantidad
+            inputCantidad.dispatchEvent(new Event('input'));
     
-            // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById("modalUnidades"));
             modal.hide();
         });
     });
-
-
 </script>
 {% endblock %}
