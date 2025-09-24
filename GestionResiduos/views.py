@@ -28,11 +28,12 @@ def inicio(request):
 
 
 
+
+
+
 @login_required
 def formularioResiduos(request):
     es_sergio = request.user.username == '1036619811'
-    TOLERANCIA_PESO = Decimal('10.0')
-    TOLERANCIA_CANTIDAD = Decimal('5.0')
 
     if request.method == 'POST':
         seleccionados = request.POST.getlist('seleccionados')
@@ -74,10 +75,7 @@ def formularioResiduos(request):
                     perfil2 = FormularioPerfil2.objects.filter(
                         grupo_codigo=posible, tipo_residuo=tipo_residuo, residuo=residuo
                     ).first()
-                    if perfil2 and (
-                        abs(Decimal(perfil2.peso) - peso) <= TOLERANCIA_PESO and
-                        abs(Decimal(perfil2.cantidad) - cantidad) <= TOLERANCIA_CANTIDAD
-                    ):
+                    if perfil2:  # Eliminamos la validación de tolerancia
                         grupo = posible
                         break
 
@@ -85,10 +83,7 @@ def formularioResiduos(request):
                     perfil1 = FormularioPerfil1.objects.filter(
                         grupo_codigo=posible, tipo_residuo=tipo_residuo, residuo=residuo
                     ).first()
-                    if perfil1 and (
-                        abs(Decimal(perfil1.peso) - peso) <= TOLERANCIA_PESO and
-                        abs(Decimal(perfil1.cantidad) - cantidad) <= TOLERANCIA_CANTIDAD
-                    ):
+                    if perfil1:  # Eliminamos la validación de tolerancia
                         grupo = posible
                         break
 
