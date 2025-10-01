@@ -127,7 +127,7 @@
                                             {% if "UND" in residuo or "Batería" in residuo %}
                                                 <div class="input-group gap-3" style="width: 180px;">
 
-                                                    <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" placeholder="UND">
+                                                    <input type="number" step="1" name="cantidad_{{ clave }}" class="form-control border-black" placeholder="UND" readonly>
                                                     <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalUnidades" data-clave="{{ clave }}" id="boton-mas-unidades">
                                                         +
                                                     </button>
@@ -140,7 +140,7 @@
                                         <td>
                                             {% if "UND" not in residuo and "Batería" not in residuo %}
                                                 <div class="input-group gap-3" style="width: 180px;">
-                                                    <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black peso-total" placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}" data-clave="{{ clave }}">
+                                                    <input type="number" step="0.01" name="peso_{{ clave }}" class="form-control border-black peso-total" placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}" data-clave="{{ clave }}" readonly>
                                                     <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCaneca" data-clave="{{ clave }}" id="boton-mas">
                                                         + 
                                                     </button>
