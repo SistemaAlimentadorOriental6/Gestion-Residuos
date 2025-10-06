@@ -63,9 +63,9 @@
                             <th>Recolector</th>
                             <th>Tipo Residuo</th>
                             <th>Residuo</th>
-                            <th>Costo Unitario</th>
                             <th>Peso</th>
                             <th>Cantidad</th>
+                            <th>Costo Unitario</th>
                             <th>Costo Total</th>
                             <th>Guardar</th>
                         </tr>
@@ -105,10 +105,6 @@
                                         <option value="{{ registro.residuo }}">{{ registro.residuo }}</option>
                                     </select>
                                 </td>
-                                
-                                <td>
-                                    <input name="costo_unitario" value="{{ registro.costo_unitario }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
-                                </td>
 
                                 <td>
                                     <input name="peso" value="{{ registro.peso }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
@@ -116,6 +112,10 @@
 
                                 <td>
                                     <input name="cantidad" value="{{ registro.cantidad }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
+                                </td>
+
+                                <td>
+                                    <input name="costo_unitario" value="{{ registro.costo_unitario }}" class="form-control form-control-sm text-end border-black" style="width: 80px;" />
                                 </td>
 
                                 <td>
