@@ -227,8 +227,20 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+
                         <label>Unidades</label>
                         <input type="number" step="1" id="cantidadUnidades" class="form-control mb-2 border-black">
+                    
+                        <label>Acción</label>
+                        <select id="accionUnidades" class="form-control mb-2 border-black">
+                            <option value="sumar">Sumar</option>
+                            <option value="restar">Restar</option>
+                        </select>
+                    
+                        <h6>Historial de Unidades:</h6>
+                        <ul id="historialUnidades" class="list-group mb-2"></ul>
+                    
+                        <p><strong>Total de unidades:</strong> <span id="totalUnidadesGeneral">0</span></p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary border-black"
@@ -413,9 +425,44 @@
     // 5. MODALES - DEFINIR HISTORIALES Y FUNCIONES
     // ============================================================
     document.addEventListener("DOMContentLoaded", function () {
-        // ⭐ VARIABLE GLOBAL DE HISTORIALES
+        // ⭐ VARIABLES GLOBALES
         window.historiales = {};
+        window.historialUnidades = {};
         let claveActual = null;
+
+        // ⭐ FUNCIÓN PARA OBTENER ID DE USUARIO (necesaria para guardar)
+        window.obtenerIdUsuario = function() {
+            const userInfo = document.querySelector('[data-user-id]');
+            if (userInfo) return userInfo.dataset.userId;
+            
+            const welcomeText = document.querySelector('.text-center.mb-3');
+            if (welcomeText) {
+                const match = welcomeText.textContent.match(/Bienvenido al Sistema de Gestión de Residuos:\s*(.+)/);
+                if (match) return match[1].trim();
+            }
+            
+            const userInput = document.querySelector('input[name="username"], input[name="user_id"]');
+            if (userInput) return userInput.value;
+            
+            return 'usuario_desconocido';
+        };
+
+        // ⭐ FUNCIÓN GLOBAL para guardar historial de unidades
+        window.guardarHistorialUnidades = function() {
+            try {
+                const USUARIO_ID = window.obtenerIdUsuario();
+                const HISTORIAL_KEY = `formulario_residuos_historial_${USUARIO_ID}`;
+                
+                const data = {
+                    usuario: USUARIO_ID,
+                    timestamp: new Date().toISOString(),
+                    historialUnidades: window.historialUnidades || {}
+                };
+                localStorage.setItem(`${HISTORIAL_KEY}_unidades`, JSON.stringify(data));
+            } catch (e) {
+                console.error("❌ Error al guardar historialUnidades:", e);
+            }
+        };
     
         // ⭐ FUNCIÓN GLOBAL actualizarHistorial
         window.actualizarHistorial = function(clave) {
@@ -447,6 +494,39 @@
             if (inputPeso) {
                 inputPeso.value = totalGeneral.toFixed(2);
                 inputPeso.dispatchEvent(new Event('input'));
+            }
+        };
+
+        // ⭐ FUNCIÓN GLOBAL actualizarHistorialUnidades
+        window.actualizarHistorialUnidades = function(clave) {
+            const historialList = document.getElementById("historialUnidades");
+            const totalSpan = document.getElementById("totalUnidadesGeneral");
+            const inputCantidad = document.querySelector(`input[name='cantidad_${clave}']`);
+        
+            historialList.innerHTML = "";
+            const historial = window.historialUnidades[clave] || [];
+        
+            // El total es el último registro
+            const total = historial.length > 0 
+                ? historial[historial.length - 1].cantidadFinal 
+                : 0;
+        
+            historial.forEach((registro, index) => {
+                const li = document.createElement("li");
+                li.classList.add("list-group-item");
+                li.innerHTML = `${index + 1}: ${registro.accion === 'sumar' ? '+' : '-'}${registro.cantidad} → Total: ${registro.cantidadFinal}
+                    <button class="btn btn-danger btn-sm ms-2" onclick="confirmarEliminarUnidad('${clave}', ${index})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                historialList.appendChild(li);
+            });
+        
+            totalSpan.textContent = total;
+        
+            if (inputCantidad) {
+                inputCantidad.value = total;
+                inputCantidad.dispatchEvent(new Event("input"));
             }
         };
     
@@ -491,7 +571,7 @@
             modal.hide();
         });
     
-        // Funciones para eliminar registros
+        // Funciones para eliminar registros de PESO
         window.confirmarEliminar = function(clave, index) {
             Swal.fire({
                 title: '¿Estás seguro?',
@@ -514,6 +594,46 @@
             window.historiales[clave].splice(index, 1);
             window.actualizarHistorial(clave);
         };
+
+        // Funciones para eliminar registros de UNIDADES
+        window.confirmarEliminarUnidad = function(clave, index) {
+            Swal.fire({
+                title: '¿Eliminar unidad?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#6ba43a',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    window.eliminarUnidad(clave, index);
+                    Swal.fire('Eliminado!', 'El registro fue eliminado.', 'success');
+                }
+            });
+        };
+        
+        window.eliminarUnidad = function(clave, index) {
+            window.historialUnidades[clave].splice(index, 1);
+            
+            // ⭐ Recalcular totales acumulados después de eliminar
+            let acumulado = 0;
+            window.historialUnidades[clave].forEach(registro => {
+                if (registro.accion === 'sumar') {
+                    acumulado += registro.cantidad;
+                } else {
+                    acumulado -= registro.cantidad;
+                }
+                if (acumulado < 0) acumulado = 0;
+                registro.cantidadFinal = acumulado;
+            });
+        
+            // ⭐ GUARDAR en localStorage
+            window.guardarHistorialUnidades();
+        
+            window.actualizarHistorialUnidades(clave);
+        };
     
         // Modal de unidades
         let claveActualUnidades = null;
@@ -522,28 +642,54 @@
             btn.addEventListener("click", function () {
                 claveActualUnidades = this.dataset.clave;
                 document.getElementById("cantidadUnidades").value = "";
+                document.getElementById("accionUnidades").value = "sumar";
+                window.actualizarHistorialUnidades(claveActualUnidades);
             });
         });
     
         document.getElementById("guardarUnidades").addEventListener("click", function () {
             const cantidad = parseInt(document.getElementById("cantidadUnidades").value) || 0;
-    
+            const accion = document.getElementById("accionUnidades").value;
+        
             if (cantidad <= 0) {
-                alert("La cantidad de unidades debe ser mayor a 0");
+                Swal.fire({
+                    icon: "warning",
+                    title: "Cantidad inválida",
+                    text: "La cantidad debe ser mayor a 0",
+                });
                 return;
             }
-    
-            const inputCantidad = document.querySelector(`input[name='cantidad_${claveActualUnidades}']`);
-            const totalActual = parseInt(inputCantidad.value) || 0;
-    
-            inputCantidad.value = (totalActual + cantidad);
-            inputCantidad.dispatchEvent(new Event('input'));
-    
+        
+            if (!window.historialUnidades[claveActualUnidades]) {
+                window.historialUnidades[claveActualUnidades] = [];
+            }
+        
+            const historial = window.historialUnidades[claveActualUnidades];
+            const totalActual = historial.length > 0 
+                ? historial[historial.length - 1].cantidadFinal 
+                : 0;
+        
+            let nuevoTotal = accion === "sumar"
+                ? totalActual + cantidad
+                : totalActual - cantidad;
+        
+            if (nuevoTotal < 0) nuevoTotal = 0;
+        
+            historial.push({
+                accion,
+                cantidad,
+                cantidadFinal: nuevoTotal
+            });
+        
+            // ⭐ GUARDAR en localStorage
+            window.guardarHistorialUnidades();
+        
+            window.actualizarHistorialUnidades(claveActualUnidades);
+        
             const modal = bootstrap.Modal.getInstance(document.getElementById("modalUnidades"));
             modal.hide();
         });
     
-        console.log('✅ Modales y historiales inicializados');
     });
     
     // ============================================================
@@ -551,9 +697,7 @@
     // ============================================================
     document.addEventListener("DOMContentLoaded", function () {
         
-        setTimeout(() => {
-            console.log('🚀 Iniciando sistema de persistencia...');
-            
+        setTimeout(() => {            
             // Verificar que historiales esté disponible
             if (typeof window.historiales === 'undefined') {
                 console.error('❌ Error: historiales no está definido');
@@ -564,33 +708,12 @@
                 console.error('❌ Error: actualizarHistorial no está definido');
                 return;
             }
-            
-            console.log('✅ Variables encontradas, continuando...');
-            
+                        
             // ========== OBTENER ID DEL USUARIO ==========
-            function obtenerIdUsuario() {
-                const userInfo = document.querySelector('[data-user-id]');
-                if (userInfo) return userInfo.dataset.userId;
-                
-                const welcomeText = document.querySelector('.text-center.mb-3');
-                if (welcomeText) {
-                    const match = welcomeText.textContent.match(/Bienvenido al Sistema de Gestión de Residuos:\s*(.+)/);
-                    if (match) return match[1].trim();
-                }
-                
-                const userInput = document.querySelector('input[name="username"], input[name="user_id"]');
-                if (userInput) return userInput.value;
-                
-                console.warn('⚠️ No se pudo identificar el usuario');
-                return 'usuario_desconocido';
-            }
-            
-            const USUARIO_ID = obtenerIdUsuario();
+            const USUARIO_ID = window.obtenerIdUsuario();
             const STORAGE_KEY = `formulario_residuos_temp_${USUARIO_ID}`;
             const HISTORIAL_KEY = `formulario_residuos_historial_${USUARIO_ID}`;
-            
-            console.log(`🔐 Usuario identificado: ${USUARIO_ID}`);
-            
+                        
             // ========== FUNCIONES DE GUARDADO ==========
             function guardarEstadoFormulario() {
                 try {
@@ -663,6 +786,20 @@
                     if (parsed.usuario !== USUARIO_ID) return {};
                     
                     return parsed.historiales || {};
+                } catch (e) {
+                    return {};
+                }
+            }
+    
+            function recuperarHistorialUnidades() {
+                try {
+                    const data = localStorage.getItem(`${HISTORIAL_KEY}_unidades`);
+                    if (!data) return {};
+            
+                    const parsed = JSON.parse(data);
+                    if (parsed.usuario !== USUARIO_ID) return {};
+            
+                    return parsed.historialUnidades || {};
                 } catch (e) {
                     return {};
                 }
@@ -751,18 +888,25 @@
             
             function integrarConHistorial() {
                 const historialesGuardados = recuperarHistoriales();
-                
+                const historialesUnidadesGuardados = recuperarHistorialUnidades();                
                 if (Object.keys(historialesGuardados).length > 0) {
-                    console.log('📦 Restaurando historiales...');
                     Object.assign(window.historiales, historialesGuardados);
                     
                     Object.keys(historialesGuardados).forEach(clave => {
                         if (historialesGuardados[clave]?.length > 0) {
                             window.actualizarHistorial(clave);
                         }
+                    });    
+                }
+    
+                if (typeof window.historialUnidades !== 'undefined' && Object.keys(historialesUnidadesGuardados).length > 0) {
+                    Object.assign(window.historialUnidades, historialesUnidadesGuardados);
+            
+                    Object.keys(historialesUnidadesGuardados).forEach(clave => {
+                        if (historialesUnidadesGuardados[clave]?.length > 0 && typeof window.actualizarHistorialUnidades === 'function') {
+                            window.actualizarHistorialUnidades(clave);
+                        }
                     });
-                    
-                    console.log('✅ Historiales restaurados completamente');
                 }
             }
             
@@ -773,10 +917,19 @@
                 guardarHistoriales();
                 guardarEstadoFormulario();
             };
+    
+            // Wrapper para actualizarHistorialUnidades
+            if (typeof window.actualizarHistorialUnidades === 'function') {
+                const actualizarHistorialUnidadesOriginal = window.actualizarHistorialUnidades;
+                window.actualizarHistorialUnidades = function(clave) {
+                    actualizarHistorialUnidadesOriginal(clave);
+                    window.guardarHistorialUnidades(); // ⭐ Usar función global
+                    guardarEstadoFormulario();
+                };
+            }
             
             // ========== LIMPIEZA ==========
             function limpiarDatosGuardados() {
-                // Elimina TODAS las claves guardadas por este sistema
                 Object.keys(localStorage).forEach(key => {
                     if (
                         key.startsWith('formulario_residuos_temp_') ||
@@ -786,12 +939,13 @@
                     }
                 });
             
-                // Limpia también memoria interna
                 if (typeof window.historiales !== 'undefined') {
                     window.historiales = {};
                 }
-            
-                console.log('🧹 Se eliminaron todos los datos del sistema de residuos');
+                
+                if (typeof window.historialUnidades !== 'undefined') {
+                    window.historialUnidades = {};
+                }
             }
             
             function limpiarDatosAntiguos() {
@@ -850,14 +1004,12 @@
                 });
                 
                 setInterval(guardarEstadoFormulario, 30000);
-                console.log('✅ Auto-guardado configurado');
             }
             
             function configurarLimpiezaAlEnviar() {
                 const form = document.querySelector('form');
                 if (form) {
                     form.addEventListener('submit', function () {
-                        console.log('📤 Enviando formulario... limpieza inmediata');
                         limpiarDatosGuardados();  
                     });
                 }
@@ -898,44 +1050,7 @@
                     timerProgressBar: true
                 });
             }
-            
-            // ========== BOTÓN DE LIMPIEZA MANUAL ==========
-            function agregarBotonLimpiezaManual() {
-                if (localStorage.getItem(STORAGE_KEY)) {
-                    const btnLimpiar = document.createElement('button');
-                    btnLimpiar.type = 'button';
-                    btnLimpiar.className = 'btn btn-sm btn-outline-danger';
-                    btnLimpiar.style.cssText = 'position: fixed; bottom: 20px; left: 20px; z-index: 9999;';
-                    btnLimpiar.innerHTML = '🗑️ Limpiar datos guardados';
-                    btnLimpiar.onclick = function() {
-                        Swal.fire({
-                            title: '¿Eliminar datos guardados?',
-                            text: 'Se borrarán todos los datos temporales',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#dc3545',
-                            cancelButtonColor: '#6c757d',
-                            confirmButtonText: 'Sí, eliminar',
-                            cancelButtonText: 'Cancelar'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                limpiarDatosGuardados();
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Datos eliminados',
-                                    text: 'La página se recargará',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                }).then(() => {
-                                    location.reload();
-                                });
-                            }
-                        });
-                    };
-                    document.body.appendChild(btnLimpiar);
-                }
-            }
-            
+        
             // ========== INICIALIZACIÓN ==========
             limpiarDatosAntiguos();
             
@@ -951,11 +1066,7 @@
                 configurarLimpiezaAlEnviar();
             }, 500);
             
-            setTimeout(guardarEstadoFormulario, 1000);
-            setTimeout(agregarBotonLimpiezaManual, 1500);
-            
-            console.log('✅ Sistema de persistencia inicializado correctamente');
-            
+            setTimeout(guardarEstadoFormulario, 1000);                        
         }, 500);
     });
 
