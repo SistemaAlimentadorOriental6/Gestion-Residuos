@@ -482,10 +482,7 @@
     
                 const listItem = document.createElement("li");
                 listItem.classList.add("list-group-item");
-                listItem.innerHTML = `${index + 1}: Residuo ${lleno} kg | Caneca ${vacio} kg | Total ${neto} kg 
-                    <button class="btn btn-danger btn-sm ms-2" onclick="confirmarEliminar('${clave}', ${index})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>`;
+                listItem.innerHTML = `${index + 1}: Residuo ${lleno} kg | Caneca ${vacio} kg | Total ${neto} kg`;
                 historialList.appendChild(listItem);
             });
     
@@ -514,11 +511,7 @@
             historial.forEach((registro, index) => {
                 const li = document.createElement("li");
                 li.classList.add("list-group-item");
-                li.innerHTML = `${index + 1}: ${registro.accion === 'sumar' ? '+' : '-'}${registro.cantidad} → Total: ${registro.cantidadFinal}
-                    <button class="btn btn-danger btn-sm ms-2" onclick="confirmarEliminarUnidad('${clave}', ${index})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                `;
+                li.innerHTML = `${index + 1}: ${registro.accion === 'sumar' ? '+' : '-'}${registro.cantidad} → Total: ${registro.cantidadFinal}`;
                 historialList.appendChild(li);
             });
         
@@ -570,70 +563,6 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById("modalCaneca"));
             modal.hide();
         });
-    
-        // Funciones para eliminar registros de PESO
-        window.confirmarEliminar = function(clave, index) {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: "¡Este registro será eliminado permanentemente!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#6ba43a',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.eliminarRegistro(clave, index);
-                    Swal.fire('Eliminado!', 'El registro ha sido eliminado.', 'success');
-                }
-            });
-        };
-    
-        window.eliminarRegistro = function(clave, index) {
-            window.historiales[clave].splice(index, 1);
-            window.actualizarHistorial(clave);
-        };
-
-        // Funciones para eliminar registros de UNIDADES
-        window.confirmarEliminarUnidad = function(clave, index) {
-            Swal.fire({
-                title: '¿Eliminar unidad?',
-                text: "Esta acción no se puede deshacer.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#6ba43a',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Eliminar',
-                cancelButtonText: 'Cancelar'
-            }).then(result => {
-                if (result.isConfirmed) {
-                    window.eliminarUnidad(clave, index);
-                    Swal.fire('Eliminado!', 'El registro fue eliminado.', 'success');
-                }
-            });
-        };
-        
-        window.eliminarUnidad = function(clave, index) {
-            window.historialUnidades[clave].splice(index, 1);
-            
-            // ⭐ Recalcular totales acumulados después de eliminar
-            let acumulado = 0;
-            window.historialUnidades[clave].forEach(registro => {
-                if (registro.accion === 'sumar') {
-                    acumulado += registro.cantidad;
-                } else {
-                    acumulado -= registro.cantidad;
-                }
-                if (acumulado < 0) acumulado = 0;
-                registro.cantidadFinal = acumulado;
-            });
-        
-            // ⭐ GUARDAR en localStorage
-            window.guardarHistorialUnidades();
-        
-            window.actualizarHistorialUnidades(clave);
-        };
     
         // Modal de unidades
         let claveActualUnidades = null;
@@ -923,7 +852,7 @@
                 const actualizarHistorialUnidadesOriginal = window.actualizarHistorialUnidades;
                 window.actualizarHistorialUnidades = function(clave) {
                     actualizarHistorialUnidadesOriginal(clave);
-                    window.guardarHistorialUnidades(); // ⭐ Usar función global
+                    window.guardarHistorialUnidades();
                     guardarEstadoFormulario();
                 };
             }
