@@ -122,8 +122,12 @@
                             <tr data-tipo="{{ tipo|lower }}">
                                 <td class="text-center">
                                     <div class="form-check form-switch d-flex justify-content-center">
-                                        <input class="form-check-input" type="checkbox" name="seleccionados"
+                                        <input
+                                            class="form-check-input form-switch residuo-check"
+                                            type="checkbox"
+                                            name="seleccionados"
                                             value="{{ tipo }} - {{ residuo }}"
+                                            data-clave="{{ clave }}"
                                             style="transform: scale(1.3); cursor: pointer;">
                                     </div>
                                 </td>
@@ -134,9 +138,9 @@
 
                                         <input type="number" step="1" name="cantidad_{{ clave }}"
                                             class="form-control border-black" placeholder="UND" readonly>
-                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-modal"
                                             data-bs-toggle="modal" data-bs-target="#modalUnidades"
-                                            data-clave="{{ clave }}" id="boton-mas-unidades">
+                                            data-clave="{{ clave }}" id="boton-mas-unidades" disabled>
                                             +
                                         </button>
                                     </div>
@@ -152,9 +156,9 @@
                                             class="form-control border-black peso-total"
                                             placeholder="{% if tipo == 'Especial' %}m³{% else %}KG{% endif %}"
                                             data-clave="{{ clave }}" readonly>
-                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill"
+                                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill btn-modal"
                                             data-bs-toggle="modal" data-bs-target="#modalCaneca"
-                                            data-clave="{{ clave }}" id="boton-mas">
+                                            data-clave="{{ clave }}" id="boton-mas" disabled>
                                             +
                                         </button>
                                     </div>
@@ -257,6 +261,29 @@
 
 
 <script>
+    
+    document.addEventListener("change", function (e) {
+
+        if (!e.target.classList.contains("residuo-check")) return;
+    
+        const clave = e.target.dataset.clave;
+        const fila = e.target.closest("tr");
+    
+        // Botones + dentro de la misma fila
+        const botones = fila.querySelectorAll(".btn-modal");
+    
+        botones.forEach(btn => {
+            btn.disabled = !e.target.checked;
+        });
+    
+        // Si desmarca, limpiamos valores para evitar confusión
+        if (!e.target.checked) {
+            fila.querySelectorAll("input[type='number']").forEach(input => {
+                input.value = '';
+            });
+        }
+    });
+
     document.addEventListener("DOMContentLoaded", function () {
         const hoy = new Date();
         const yyyy = hoy.getFullYear();
@@ -273,6 +300,7 @@
     // 2. FORMATEO DE COSTOS (PESOS COLOMBIANOS)
     // ============================================================
     document.addEventListener("DOMContentLoaded", function () {
+        
         function formatearPesosColombianos(valor) {
             valor = valor.replace(/\D/g, "");
             if (!valor) return "";
@@ -765,8 +793,15 @@
                     
                     if (datos.residuosSeleccionados) {
                         datos.residuosSeleccionados.forEach(valor => {
-                            const checkbox = document.querySelector(`input[name="seleccionados"][value="${valor}"]`);
-                            if (checkbox) checkbox.checked = true;
+                            const checkbox = document.querySelector(
+                                `input[name="seleccionados"][value="${valor}"]`
+                            );
+                            if (checkbox) {
+                                checkbox.checked = true;
+                    
+                                // 🔥 DISPARAR CHANGE para habilitar botones
+                                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
                         });
                     }
                     
@@ -946,7 +981,12 @@
             
             // ========== INDICADORES ==========
             function mostrarIndicadorGuardado() {
+
+                // ⛔ En móviles no mostramos el indicador
+                if (window.innerWidth <= 768) return;
+            
                 let indicador = document.getElementById('indicador-guardado');
+            
                 if (!indicador) {
                     indicador = document.createElement('div');
                     indicador.id = 'indicador-guardado';
@@ -961,6 +1001,7 @@
                     indicador.innerHTML = '💾 Guardado';
                     document.body.appendChild(indicador);
                 }
+            
                 indicador.style.opacity = '1';
                 setTimeout(() => indicador.style.opacity = '0', 1500);
             }

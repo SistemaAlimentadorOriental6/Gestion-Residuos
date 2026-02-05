@@ -19,6 +19,7 @@ from django.db.models.functions import ExtractMonth, ExtractYear
 from decimal import Decimal
 import uuid
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 
 
@@ -64,7 +65,12 @@ def formularioResiduos(request):
             except:
                 cantidad = Decimal('0.0')
 
-            posibles_grupos = GrupoResiduo.objects.filter(completado=False)
+            hoy = timezone.localdate()
+
+            posibles_grupos = GrupoResiduo.objects.filter(
+                completado=False,
+                creado_en__date=hoy
+            )
             grupo = None
 
             for posible in posibles_grupos:
