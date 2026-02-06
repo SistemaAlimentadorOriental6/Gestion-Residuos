@@ -67,31 +67,86 @@ def formularioResiduos(request):
 
             hoy = timezone.localdate()
 
+            # Grupos que tengan registros de vigilantes HOY
             posibles_grupos = GrupoResiduo.objects.filter(
                 completado=False,
-                creado_en__date=hoy
+                id__in=FormularioPerfil2.objects.filter(
+                    fecha=hoy
+                ).values('grupo_codigo_id')
             )
             grupo = None
 
             for posible in posibles_grupos:
-                existe_1 = FormularioPerfil1.objects.filter(grupo_codigo=posible).exists()
-                existe_2 = FormularioPerfil2.objects.filter(grupo_codigo=posible).exists()
 
-                if es_sergio and not existe_1:
-                    perfil2 = FormularioPerfil2.objects.filter(
-                        grupo_codigo=posible, tipo_residuo=tipo_residuo, residuo=residuo
-                    ).first()
-                    if perfil2:  # Eliminamos la validación de tolerancia
+                tipo_residuo = tipo_residuo.strip()
+                residuo = residuo.strip()
+
+                print("\n==============================")
+                print("🔎 Buscando grupo para:")
+                print("Tipo residuo POST :", repr(tipo_residuo))
+                print("Residuo POST      :", repr(residuo))
+                print("Fecha grupo       :", posible.creado_en.date())
+                print("Código grupo      :", posible.codigo)
+
+                if es_sergio:
+                    # --- DEPURACIÓN: qué residuos tiene el vigilante en este grupo ---
+                    perfiles_vigilante = FormularioPerfil2.objects.filter(grupo_codigo=posible)
+                    print("📦 Residuos vigilante en grupo:")
+                    for p in perfiles_vigilante:
+                        print("   -", repr(p.residuo))
+
+                    # El vigilante DEBE haber registrado ESTE residuo
+                    existe_perfil2 = FormularioPerfil2.objects.filter(
+                        grupo_codigo=posible,
+                        tipo_residuo__iexact=tipo_residuo,
+                        residuo__iexact=residuo
+                    ).exists()
+
+                    # Sergio NO debe haber registrado aún ESTE residuo
+                    existe_perfil1 = FormularioPerfil1.objects.filter(
+                        grupo_codigo=posible,
+                        tipo_residuo__iexact=tipo_residuo,
+                        residuo__iexact=residuo
+                    ).exists()
+
+                    print("✔ Existe Perfil2 (vigilante):", existe_perfil2)
+                    print("❌ Existe Perfil1 (Sergio):  ", existe_perfil1)
+
+                    if existe_perfil2 and not existe_perfil1:
+                        print("✅ Grupo compatible encontrado:", posible.codigo)
                         grupo = posible
                         break
+                    else:
+                        print("⛔ Grupo NO compatible")
 
-                elif not es_sergio and not existe_2:
-                    perfil1 = FormularioPerfil1.objects.filter(
-                        grupo_codigo=posible, tipo_residuo=tipo_residuo, residuo=residuo
-                    ).first()
-                    if perfil1:  # Eliminamos la validación de tolerancia
+                else:
+                    # --- DEPURACIÓN: qué residuos tiene Sergio en este grupo ---
+                    perfiles_sergio = FormularioPerfil1.objects.filter(grupo_codigo=posible)
+                    print("📦 Residuos Sergio en grupo:")
+                    for p in perfiles_sergio:
+                        print("   -", repr(p.residuo))
+
+                    existe_perfil1 = FormularioPerfil1.objects.filter(
+                        grupo_codigo=posible,
+                        tipo_residuo__iexact=tipo_residuo,
+                        residuo__iexact=residuo
+                    ).exists()
+
+                    existe_perfil2 = FormularioPerfil2.objects.filter(
+                        grupo_codigo=posible,
+                        tipo_residuo__iexact=tipo_residuo,
+                        residuo__iexact=residuo
+                    ).exists()
+
+                    print("✔ Existe Perfil1 (Sergio):   ", existe_perfil1)
+                    print("❌ Existe Perfil2 (vigilante):", existe_perfil2)
+
+                    if existe_perfil1 and not existe_perfil2:
+                        print("✅ Grupo compatible encontrado:", posible.codigo)
                         grupo = posible
                         break
+                    else:
+                        print("⛔ Grupo NO compatible")
 
             if not grupo:
                 if es_sergio:
@@ -267,12 +322,13 @@ def formularioResiduos(request):
 
     grupos_pendientes = []
     if es_sergio:
+        hoy = timezone.now().date()
         grupos_incompletos = GrupoResiduo.objects.filter(
             completado=False,
             formularioperfil1__isnull=True,
-            formularioperfil2__isnull=False
+            formularioperfil2__isnull=False,
+            creado_en__date=hoy
         ).distinct()
-
         for grupo in grupos_incompletos:
             registro_vigilancia = FormularioPerfil2.objects.filter(grupo_codigo=grupo).first()
             if registro_vigilancia:
