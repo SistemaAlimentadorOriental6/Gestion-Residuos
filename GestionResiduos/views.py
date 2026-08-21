@@ -238,6 +238,7 @@ def formularioResiduos(request):
             "Cobre Contaminado - KG",
             "Cobre Encauchetado - KG",
             "Cobre Rojo - KG",
+            "Cobre Amarillo - KG",
             "Filtro de Aceite - KG",
             "Hierro Gris - KG",
             "Intercooler Aluminio - KG",
