@@ -321,6 +321,7 @@ def formularioResiduos(request):
         ]   
     }
 
+
     grupos_pendientes = []
     if es_sergio:
         hoy = timezone.now().date()
